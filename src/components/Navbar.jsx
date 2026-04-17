@@ -1,4 +1,3 @@
-// File: src/components/Navbar.jsx
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Building2, Menu, X } from "lucide-react";
@@ -6,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const languages = [
-  { code: "EN", label: "English" },
-  { code: "SW", label: "Swahili" },
-  { code: "CHN", label: "中文" },
+  { code: "en", label: "EN" },
+  { code: "sw", label: "SW" },
+  { code: "zh-CN", label: "中文" },
 ];
 
 const Navbar = () => {
@@ -50,28 +49,41 @@ const Navbar = () => {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <div className="flex rounded-lg border border-border overflow-hidden">
-            {languages.map((l) => (
-              <button
-                key={l.code}
-                onClick={() => setLang(l.code)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  lang === l.code
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {l.label}
-              </button>
-            ))}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <div className="flex">
+              {languages.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => setLang(l.code)}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                    lang === l.code
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
           </div>
+
           <Button variant="outline" asChild>
             <Link to="/admin/login">{t("adminPortal")}</Link>
           </Button>
         </div>
 
-        <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        <button
+          type="button"
+          className="md:hidden"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle navigation menu"
+        >
+          {mobileOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
         </button>
       </div>
 
@@ -88,6 +100,29 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+
+            <div className="mt-2 overflow-hidden rounded-lg border border-border">
+              <div className="flex">
+                {languages.map((l) => (
+                  <button
+                    key={l.code}
+                    type="button"
+                    onClick={() => {
+                      setLang(l.code);
+                      setMobileOpen(false);
+                    }}
+                    className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                      lang === l.code
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <Button variant="outline" asChild className="mt-2">
               <Link to="/admin/login" onClick={() => setMobileOpen(false)}>
                 {t("adminPortal")}

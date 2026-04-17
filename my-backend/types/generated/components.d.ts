@@ -1,5 +1,17 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface CommonButtonLink extends Struct.ComponentSchema {
+  collectionName: 'components_common_button_links';
+  info: {
+    displayName: 'button-link';
+  };
+  attributes: {
+    label: Schema.Attribute.String;
+    openInNewTab: Schema.Attribute.Boolean;
+    url: Schema.Attribute.String;
+  };
+}
+
 export interface HeroSlider extends Struct.ComponentSchema {
   collectionName: 'components_hero_sliders';
   info: {
@@ -38,6 +50,7 @@ export interface ServiceFeatures extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'common.button-link': CommonButtonLink;
       'hero.slider': HeroSlider;
       'home.stats': HomeStats;
       'service.features': ServiceFeatures;

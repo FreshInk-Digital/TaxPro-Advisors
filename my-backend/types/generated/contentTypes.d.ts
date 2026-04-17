@@ -589,49 +589,243 @@ export interface ApiHomePageHomePage extends Struct.SingleTypeSchema {
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    CTA_description: Schema.Attribute.String;
-    CTA_primaryButtonLink: Schema.Attribute.String;
-    CTA_primaryButtonText: Schema.Attribute.String;
-    CTA_secondaryButtonLink: Schema.Attribute.String;
-    CTA_secondaryButtonText: Schema.Attribute.String;
-    CTA_title: Schema.Attribute.String;
-    fastResponseDescription: Schema.Attribute.Text;
-    fastResponseTitle: Schema.Attribute.String;
-    heroDescription: Schema.Attribute.Text;
-    heroTag: Schema.Attribute.String;
-    heroTitleLine1: Schema.Attribute.String;
-    heroTitleLine2: Schema.Attribute.String;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    CTA_description: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    CTA_primaryButtonLink: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    CTA_primaryButtonText: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    CTA_secondaryButtonLink: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    CTA_secondaryButtonText: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    CTA_title: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    fastResponseDescription: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    fastResponseTitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    heroDescription: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    heroTag: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    heroTitleLine1: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    heroTitleLine2: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::home-page.home-page'
+    >;
+    primaryButtonLink: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    primaryButtonText: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    secondaryButtonLink: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    secondaryButtonText: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    section2Subtitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    section2Tag: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    section2Title: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    section3Description: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    section3Tag: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    section3Title: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    section4Subtitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    section4Tag: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    section4Title: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    sectionSubtitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    sectionTag: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    sectionTitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    secureDescription: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    secureTitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    slider: Schema.Attribute.Component<'hero.slider', true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Stats_Section: Schema.Attribute.Component<'home.stats', true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPosterCategoryPosterCategory
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'poster_categories';
+  info: {
+    displayName: 'poster-category';
+    pluralName: 'poster-categories';
+    singularName: 'poster-category';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::poster-category.poster-category'
     > &
       Schema.Attribute.Private;
-    primaryButtonLink: Schema.Attribute.String;
-    primaryButtonText: Schema.Attribute.String;
+    name: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    secondaryButtonLink: Schema.Attribute.String;
-    secondaryButtonText: Schema.Attribute.String;
-    section2Subtitle: Schema.Attribute.String;
-    section2Tag: Schema.Attribute.String;
-    section2Title: Schema.Attribute.String;
-    section3Description: Schema.Attribute.Text;
-    section3Tag: Schema.Attribute.String;
-    section3Title: Schema.Attribute.String;
-    section4Subtitle: Schema.Attribute.String;
-    section4Tag: Schema.Attribute.String;
-    section4Title: Schema.Attribute.String;
-    sectionSubtitle: Schema.Attribute.String;
-    sectionTag: Schema.Attribute.String;
-    sectionTitle: Schema.Attribute.String;
-    secureDescription: Schema.Attribute.Text;
-    secureTitle: Schema.Attribute.String;
-    slider: Schema.Attribute.Component<'hero.slider', true>;
-    Stats_Section: Schema.Attribute.Component<'home.stats', true>;
+    slug: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1373,6 +1567,7 @@ declare module '@strapi/strapi' {
       'api::documentation-page.documentation-page': ApiDocumentationPageDocumentationPage;
       'api::documentation.documentation': ApiDocumentationDocumentation;
       'api::home-page.home-page': ApiHomePageHomePage;
+      'api::poster-category.poster-category': ApiPosterCategoryPosterCategory;
       'api::poster.poster': ApiPosterPoster;
       'api::posters-page.posters-page': ApiPostersPagePostersPage;
       'api::service-request.service-request': ApiServiceRequestServiceRequest;

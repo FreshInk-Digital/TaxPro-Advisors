@@ -1,0 +1,113 @@
+{
+  "heroTag": "📋 Modern Tax Solutions for 2025",
+  "heroTitleLine1": "Smart Tax & Compliance",
+  "heroTitleLine2": "Solutions for Growing Businesses",
+  "heroDescription": "We help individuals, startups, and companies handle tax planning, documentation, compliance, and advisory with confidence.",
+  "primaryButtonText": "Get Started",
+  "primaryButtonLink": "/services",
+  "secondaryButtonText": "View Services",
+  "secondaryButtonLink": "/services",
+
+  "sectionTag": "What We Do",
+  "sectionTitle": "Our Services",
+  "sectionSubtitle": "Practical tax advisory and documentation support tailored for businesses and individuals.",
+
+  "section2Tag": "Testimonials",
+  "section2Title": "What Clients Say",
+  "section2Subtitle": "Trusted by founders, companies, and investors who need accurate tax guidance.",
+
+  "section3Tag": "Get In Touch",
+  "section3Title": "Ready to optimize your tax strategy?",
+  "section3Description": "Send us your request and our team will get back to you with the right guidance.",
+
+  "fastResponseTitle": "Fast Response",
+  "fastResponseDescription": "We respond quickly to service and consultation requests.",
+
+  "secureTitle": "Secure & Confidential",
+  "secureDescription": "Your information is handled with care and strict confidentiality.",
+
+  "section4Tag": "Free Resources",
+  "section4Title": "Posters & Resources",
+  "section4Subtitle": "Helpful downloadable materials and quick guides for tax awareness.",
+
+  "CTA_title": "Ready to work with tax experts?",
+  "CTA_description": "Book a consultation today and let us help you simplify compliance and planning.",
+  "CTA_primaryButtonText": "Book Consultation",
+  "CTA_primaryButtonLink": "/service-request",
+  "CTA_secondaryButtonText": "Explore Services",
+  "CTA_secondaryButtonLink": "/services",
+
+  "slider": [
+    {
+      "caption": "Expert Tax Advisory"
+    },
+    {
+      "caption": "Data-Driven Strategies"
+    },
+    {
+      "caption": "Precise Documentation"
+    },
+    {
+      "caption": "Corporate Planning"
+    }
+  ],
+
+  "Stats_Section": [
+    {
+      "value": "2,500+",
+      "label": "Clients Served"
+    },
+    {
+      "value": "$50M+",
+      "label": "Tax Saved"
+    },
+    {
+      "value": "15+",
+      "label": "Years Experience"
+    },
+    {
+      "value": "4.9/5",
+      "label": "Client Rating"
+    }
+  ],
+
+  "testimonials": [
+    {
+      "name": "Sarah Johnson",
+      "role": "CEO, TechFlow Inc.",
+      "text": "TaxPro saved us over $200K in our first year. Their strategic approach to corporate tax planning is unmatched.",
+      "rating": 5
+    },
+    {
+      "name": "Michael Chen",
+      "role": "Startup Founder",
+      "text": "As a first-time founder, navigating taxes was daunting. TaxPro made it simple and saved me money I didn't know I could save.",
+      "rating": 5
+    },
+    {
+      "name": "Amanda Williams",
+      "role": "Real Estate Investor",
+      "text": "Their expertise in real estate tax deductions has been invaluable. Highly recommend for any serious investor.",
+      "rating": 5
+    }
+  ],
+
+  "posters": [
+    {
+      "title": "2025 Tax Deadlines Poster",
+      "description": "Quick reference guide for tax professionals."
+    },
+    {
+      "title": "Deduction Checklist",
+      "description": "Quick reference guide for tax professionals."
+    },
+    {
+      "title": "Surviving an Audit",
+      "description": "Quick reference guide for tax professionals."
+    },
+    {
+      "title": "Startup Tax Basics",
+      "description": "Quick reference guide for tax professionals."
+    }
+  ]
+}
