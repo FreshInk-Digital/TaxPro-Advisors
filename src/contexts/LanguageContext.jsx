@@ -1,3 +1,4 @@
+// File: src/contexts/LanguageContext.jsx
 import { createContext, useContext, useState } from "react";
 
 const translations = {

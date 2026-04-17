@@ -1,3 +1,4 @@
+// File: src/components/Navbar.jsx
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Building2, Menu, X } from "lucide-react";

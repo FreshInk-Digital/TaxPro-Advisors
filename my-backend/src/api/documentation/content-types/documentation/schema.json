@@ -1,0 +1,55 @@
+{
+  "kind": "collectionType",
+  "collectionName": "documentations",
+  "info": {
+    "singularName": "documentation",
+    "pluralName": "documentations",
+    "displayName": "documentation"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "fileUpload": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "externalPreviewUrl": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "sizeLabel": {
+      "type": "string"
+    },
+    "dateLabel": {
+      "type": "date"
+    },
+    "displayOrder": {
+      "type": "integer"
+    },
+    "document_category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::document-category.document-category",
+      "inversedBy": "documentations"
+    }
+  }
+}

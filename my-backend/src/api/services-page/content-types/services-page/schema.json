@@ -1,0 +1,51 @@
+{
+  "kind": "singleType",
+  "collectionName": "services_pages",
+  "info": {
+    "singularName": "services-page",
+    "pluralName": "services-pages",
+    "displayName": "services-page"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "pageTitle": {
+      "type": "string"
+    },
+    "pageDescription": {
+      "type": "text"
+    },
+    "diagnosticBadge": {
+      "type": "string"
+    },
+    "diagnosticTitle": {
+      "type": "string"
+    },
+    "diagnosticDescription": {
+      "type": "text"
+    },
+    "diagnosticButtonText": {
+      "type": "string"
+    },
+    "readySectionTitle": {
+      "type": "string"
+    },
+    "readySectionDescription": {
+      "type": "text"
+    },
+    "directLineLabel": {
+      "type": "string"
+    },
+    "directLineValue": {
+      "type": "string"
+    },
+    "emailSupportLabel": {
+      "type": "string"
+    },
+    "emailSupportValue": {
+      "type": "email"
+    }
+  }
+}

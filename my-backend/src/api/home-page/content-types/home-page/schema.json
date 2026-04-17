@@ -1,0 +1,115 @@
+{
+  "kind": "singleType",
+  "collectionName": "home_pages",
+  "info": {
+    "singularName": "home-page",
+    "pluralName": "home-pages",
+    "displayName": "home-page"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "heroTag": {
+      "type": "string"
+    },
+    "heroTitleLine1": {
+      "type": "string"
+    },
+    "heroTitleLine2": {
+      "type": "string"
+    },
+    "heroDescription": {
+      "type": "text"
+    },
+    "primaryButtonText": {
+      "type": "string"
+    },
+    "primaryButtonLink": {
+      "type": "string"
+    },
+    "secondaryButtonText": {
+      "type": "string"
+    },
+    "secondaryButtonLink": {
+      "type": "string"
+    },
+    "slider": {
+      "type": "component",
+      "component": "hero.slider",
+      "repeatable": true
+    },
+    "Stats_Section": {
+      "type": "component",
+      "component": "home.stats",
+      "repeatable": true
+    },
+    "sectionTag": {
+      "type": "string"
+    },
+    "sectionTitle": {
+      "type": "string"
+    },
+    "sectionSubtitle": {
+      "type": "string"
+    },
+    "section2Tag": {
+      "type": "string"
+    },
+    "section2Title": {
+      "type": "string"
+    },
+    "section2Subtitle": {
+      "type": "string"
+    },
+    "section3Tag": {
+      "type": "string"
+    },
+    "section3Title": {
+      "type": "string"
+    },
+    "section3Description": {
+      "type": "text"
+    },
+    "fastResponseTitle": {
+      "type": "string"
+    },
+    "fastResponseDescription": {
+      "type": "text"
+    },
+    "secureTitle": {
+      "type": "string"
+    },
+    "secureDescription": {
+      "type": "text"
+    },
+    "section4Tag": {
+      "type": "string"
+    },
+    "section4Title": {
+      "type": "string"
+    },
+    "section4Subtitle": {
+      "type": "string"
+    },
+    "CTA_title": {
+      "type": "string"
+    },
+    "CTA_description": {
+      "type": "string"
+    },
+    "CTA_primaryButtonText": {
+      "type": "string"
+    },
+    "CTA_primaryButtonLink": {
+      "type": "string"
+    },
+    "CTA_secondaryButtonText": {
+      "type": "string"
+    },
+    "CTA_secondaryButtonLink": {
+      "type": "string"
+    }
+  }
+}

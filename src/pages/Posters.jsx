@@ -1,3 +1,4 @@
+// File: src/pages/Posters.jsx
 import { FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";

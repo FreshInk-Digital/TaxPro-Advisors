@@ -1,0 +1,58 @@
+{
+  "kind": "singleType",
+  "collectionName": "service_requests",
+  "info": {
+    "singularName": "service-request",
+    "pluralName": "service-requests",
+    "displayName": "service-request"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "firstName": {
+      "type": "string"
+    },
+    "lastName": {
+      "type": "string"
+    },
+    "companyName": {
+      "type": "string"
+    },
+    "workEmail": {
+      "type": "email"
+    },
+    "phoneNumber": {
+      "type": "string"
+    },
+    "selectedService": {
+      "type": "string"
+    },
+    "projectDetails": {
+      "type": "text"
+    },
+    "supportingDocuments": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "services_status": {
+      "type": "enumeration",
+      "enum": [
+        "new",
+        "read",
+        "replied",
+        "archived"
+      ]
+    },
+    "adminNotes": {
+      "type": "text"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "kind": "singleType",
+  "collectionName": "documentation_pages",
+  "info": {
+    "singularName": "documentation-page",
+    "pluralName": "documentation-pages",
+    "displayName": "documentation-page"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "searchPlaceholder": {
+      "type": "string"
+    },
+    "categoriesLabel": {
+      "type": "string"
+    }
+  }
+}

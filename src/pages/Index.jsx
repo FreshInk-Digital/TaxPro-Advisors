@@ -1,3 +1,4 @@
+// File: src/pages/Index.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Building2, FileText, User, ArrowRight, Clock, Shield, CheckCircle, Star, TrendingUp, Users, Award } from "lucide-react";

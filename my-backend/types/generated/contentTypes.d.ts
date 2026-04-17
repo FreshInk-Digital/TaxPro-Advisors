@@ -107,43 +107,6 @@ export interface AdminApiTokenPermission extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface AdminAuditLog extends Struct.CollectionTypeSchema {
-  collectionName: 'strapi_audit_logs';
-  info: {
-    displayName: 'Audit Log';
-    pluralName: 'audit-logs';
-    singularName: 'audit-log';
-  };
-  options: {
-    draftAndPublish: false;
-    timestamps: false;
-  };
-  pluginOptions: {
-    'content-manager': {
-      visible: false;
-    };
-    'content-type-builder': {
-      visible: false;
-    };
-  };
-  attributes: {
-    action: Schema.Attribute.String & Schema.Attribute.Required;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    date: Schema.Attribute.DateTime & Schema.Attribute.Required;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<'oneToMany', 'admin::audit-log'> &
-      Schema.Attribute.Private;
-    payload: Schema.Attribute.JSON;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    user: Schema.Attribute.Relation<'oneToOne', 'admin::user'>;
-  };
-}
-
 export interface AdminPermission extends Struct.CollectionTypeSchema {
   collectionName: 'admin_permissions';
   info: {
@@ -464,6 +427,433 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     username: Schema.Attribute.String;
+  };
+}
+
+export interface ApiClientMessageClientMessage
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'client_messages';
+  info: {
+    displayName: 'client-message';
+    pluralName: 'client-messages';
+    singularName: 'client-message';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    adminNotes: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email;
+    firstName: Schema.Attribute.String;
+    lastName: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::client-message.client-message'
+    > &
+      Schema.Attribute.Private;
+    message: Schema.Attribute.Text;
+    msg_status: Schema.Attribute.Enumeration<
+      ['new', 'read', 'replied', 'archived']
+    > &
+      Schema.Attribute.DefaultTo<'new'>;
+    phone: Schema.Attribute.Integer;
+    publishedAt: Schema.Attribute.DateTime;
+    selectedService: Schema.Attribute.String;
+    sourcePage: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiDocumentCategoryDocumentCategory
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'document_categories';
+  info: {
+    displayName: 'document-category';
+    pluralName: 'document-categories';
+    singularName: 'document-category';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    documentations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::documentation.documentation'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::document-category.document-category'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiDocumentationPageDocumentationPage
+  extends Struct.SingleTypeSchema {
+  collectionName: 'documentation_pages';
+  info: {
+    displayName: 'documentation-page';
+    pluralName: 'documentation-pages';
+    singularName: 'documentation-page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    categoriesLabel: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::documentation-page.documentation-page'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    searchPlaceholder: Schema.Attribute.String;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiDocumentationDocumentation
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'documentations';
+  info: {
+    displayName: 'documentation';
+    pluralName: 'documentations';
+    singularName: 'documentation';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dateLabel: Schema.Attribute.Date;
+    description: Schema.Attribute.Text;
+    displayOrder: Schema.Attribute.Integer;
+    document_category: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::document-category.document-category'
+    >;
+    externalPreviewUrl: Schema.Attribute.String;
+    fileUpload: Schema.Attribute.Media<
+      'images' | 'files' | 'videos' | 'audios'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::documentation.documentation'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    sizeLabel: Schema.Attribute.String;
+    slug: Schema.Attribute.String;
+    title: Schema.Attribute.String;
+    type: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiHomePageHomePage extends Struct.SingleTypeSchema {
+  collectionName: 'home_pages';
+  info: {
+    displayName: 'home-page';
+    pluralName: 'home-pages';
+    singularName: 'home-page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    CTA_description: Schema.Attribute.String;
+    CTA_primaryButtonLink: Schema.Attribute.String;
+    CTA_primaryButtonText: Schema.Attribute.String;
+    CTA_secondaryButtonLink: Schema.Attribute.String;
+    CTA_secondaryButtonText: Schema.Attribute.String;
+    CTA_title: Schema.Attribute.String;
+    fastResponseDescription: Schema.Attribute.Text;
+    fastResponseTitle: Schema.Attribute.String;
+    heroDescription: Schema.Attribute.Text;
+    heroTag: Schema.Attribute.String;
+    heroTitleLine1: Schema.Attribute.String;
+    heroTitleLine2: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::home-page.home-page'
+    > &
+      Schema.Attribute.Private;
+    primaryButtonLink: Schema.Attribute.String;
+    primaryButtonText: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    secondaryButtonLink: Schema.Attribute.String;
+    secondaryButtonText: Schema.Attribute.String;
+    section2Subtitle: Schema.Attribute.String;
+    section2Tag: Schema.Attribute.String;
+    section2Title: Schema.Attribute.String;
+    section3Description: Schema.Attribute.Text;
+    section3Tag: Schema.Attribute.String;
+    section3Title: Schema.Attribute.String;
+    section4Subtitle: Schema.Attribute.String;
+    section4Tag: Schema.Attribute.String;
+    section4Title: Schema.Attribute.String;
+    sectionSubtitle: Schema.Attribute.String;
+    sectionTag: Schema.Attribute.String;
+    sectionTitle: Schema.Attribute.String;
+    secureDescription: Schema.Attribute.Text;
+    secureTitle: Schema.Attribute.String;
+    slider: Schema.Attribute.Component<'hero.slider', true>;
+    Stats_Section: Schema.Attribute.Component<'home.stats', true>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPosterPoster extends Struct.CollectionTypeSchema {
+  collectionName: 'posters';
+  info: {
+    displayName: 'poster';
+    pluralName: 'posters';
+    singularName: 'poster';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    caption: Schema.Attribute.Text;
+    category: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    displayOrder: Schema.Attribute.Integer;
+    featuredOnHome: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    format: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::poster.poster'
+    > &
+      Schema.Attribute.Private;
+    posterImage: Schema.Attribute.Media<
+      'images' | 'files' | 'videos' | 'audios'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPostersPagePostersPage extends Struct.SingleTypeSchema {
+  collectionName: 'posters_pages';
+  info: {
+    displayName: 'posters-page';
+    pluralName: 'posters-pages';
+    singularName: 'posters-page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::posters-page.posters-page'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiServiceRequestServiceRequest
+  extends Struct.SingleTypeSchema {
+  collectionName: 'service_requests';
+  info: {
+    displayName: 'service-request';
+    pluralName: 'service-requests';
+    singularName: 'service-request';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    adminNotes: Schema.Attribute.Text;
+    companyName: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    firstName: Schema.Attribute.String;
+    lastName: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::service-request.service-request'
+    > &
+      Schema.Attribute.Private;
+    phoneNumber: Schema.Attribute.String;
+    projectDetails: Schema.Attribute.Text;
+    publishedAt: Schema.Attribute.DateTime;
+    selectedService: Schema.Attribute.String;
+    services_status: Schema.Attribute.Enumeration<
+      ['new', 'read', 'replied', 'archived']
+    >;
+    supportingDocuments: Schema.Attribute.Media<
+      'images' | 'files' | 'videos' | 'audios'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    workEmail: Schema.Attribute.Email;
+  };
+}
+
+export interface ApiServiceService extends Struct.CollectionTypeSchema {
+  collectionName: 'services';
+  info: {
+    displayName: 'service';
+    pluralName: 'services';
+    singularName: 'service';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    displayOrder: Schema.Attribute.Integer;
+    features: Schema.Attribute.Component<'service.features', true>;
+    fullDescription: Schema.Attribute.Text;
+    iconKey: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'>;
+    image: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'>;
+    isFeatured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::service.service'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    shortDescription: Schema.Attribute.String;
+    slug: Schema.Attribute.String;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiServicesPageServicesPage extends Struct.SingleTypeSchema {
+  collectionName: 'services_pages';
+  info: {
+    displayName: 'services-page';
+    pluralName: 'services-pages';
+    singularName: 'services-page';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    diagnosticBadge: Schema.Attribute.String;
+    diagnosticButtonText: Schema.Attribute.String;
+    diagnosticDescription: Schema.Attribute.Text;
+    diagnosticTitle: Schema.Attribute.String;
+    directLineLabel: Schema.Attribute.String;
+    directLineValue: Schema.Attribute.String;
+    emailSupportLabel: Schema.Attribute.String;
+    emailSupportValue: Schema.Attribute.Email;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::services-page.services-page'
+    > &
+      Schema.Attribute.Private;
+    pageDescription: Schema.Attribute.Text;
+    pageTitle: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    readySectionDescription: Schema.Attribute.Text;
+    readySectionTitle: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSiteSettingSiteSetting extends Struct.SingleTypeSchema {
+  collectionName: 'site_settings';
+  info: {
+    displayName: 'site-setting';
+    pluralName: 'site-settings';
+    singularName: 'site-setting';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    address: Schema.Attribute.String;
+    admin_portal: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email;
+    footer_copyright: Schema.Attribute.String;
+    footer_description: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::site-setting.site-setting'
+    > &
+      Schema.Attribute.Private;
+    logo: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'>;
+    newsletter: Schema.Attribute.String;
+    phone: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    site_name: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -972,13 +1362,23 @@ declare module '@strapi/strapi' {
     export interface ContentTypeSchemas {
       'admin::api-token': AdminApiToken;
       'admin::api-token-permission': AdminApiTokenPermission;
-      'admin::audit-log': AdminAuditLog;
       'admin::permission': AdminPermission;
       'admin::role': AdminRole;
       'admin::session': AdminSession;
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::client-message.client-message': ApiClientMessageClientMessage;
+      'api::document-category.document-category': ApiDocumentCategoryDocumentCategory;
+      'api::documentation-page.documentation-page': ApiDocumentationPageDocumentationPage;
+      'api::documentation.documentation': ApiDocumentationDocumentation;
+      'api::home-page.home-page': ApiHomePageHomePage;
+      'api::poster.poster': ApiPosterPoster;
+      'api::posters-page.posters-page': ApiPostersPagePostersPage;
+      'api::service-request.service-request': ApiServiceRequestServiceRequest;
+      'api::service.service': ApiServiceService;
+      'api::services-page.services-page': ApiServicesPageServicesPage;
+      'api::site-setting.site-setting': ApiSiteSettingSiteSetting;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

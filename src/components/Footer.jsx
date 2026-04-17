@@ -1,3 +1,4 @@
+// File: src/components/Footer.jsx
 import { Link } from "react-router-dom";
 import { Building2, Mail, Phone, MapPin } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
