@@ -705,7 +705,7 @@ export interface ApiPostersPagePostersPage extends Struct.SingleTypeSchema {
 }
 
 export interface ApiServiceRequestServiceRequest
-  extends Struct.SingleTypeSchema {
+  extends Struct.CollectionTypeSchema {
   collectionName: 'service_requests';
   info: {
     displayName: 'service-request';
