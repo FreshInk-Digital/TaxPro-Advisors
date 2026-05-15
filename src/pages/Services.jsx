@@ -1,61 +1,98 @@
 // File: src/pages/Services.jsx
 import { Link } from "react-router-dom";
-import { Building2, User, Shield, Globe } from "lucide-react";
+import { Building2, User, Shield, Globe, ArrowRight, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import ServiceCard from "@/components/ServiceCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { servicesApi, publicApi } from "@/lib/api";
+import { serviceRequestSchema } from "@/lib/schemas";
+import { SkeletonCard } from "@/components/ui/skeleton";
+
+const fallbackIcons = [Building2, User, Shield, Globe];
 
 const Services = () => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
-  const services = [
-    {
-      icon: Building2,
-      title: t("corporateTax"),
-      description: "Comprehensive tax strategy and compliance for modern enterprises.",
-      features: [
-        "Corporate & Partnership Tax Returns (1120, 1120S, 1065)",
-        "Mergers, Acquisitions, and Restructuring Tax Advisory",
-        "R&D Tax Credit Calculation and Filing",
-      ],
+  // Fetch services
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["services", lang],
+    queryFn: async () => {
+      const res = await servicesApi.list(lang);
+      const d = res?.data;
+      return Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []);
     },
-    {
-      icon: User,
-      title: "Personal Wealth & Tax",
-      description: "Dedicated advisory for high-net-worth individuals and families.",
-      features: [
-        "Complex Individual Tax Returns (Form 1040)",
-        "Trust, Estate, and Gift Tax Planning",
-        "Cryptocurrency and Alternative Asset Tax Strategy",
-      ],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const services = data || [];
+
+  const getTranslation = (service) => {
+    const translations = service?.translations || [];
+    return (
+      translations.find((tr) => tr?.language?.code === lang) ||
+      translations.find((tr) => tr?.language?.code === "en") ||
+      translations[0] ||
+      null
+    );
+  };
+
+  // Quick-contact inline form (same as Index contact form)
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(
+      serviceRequestSchema.pick({ fullName: true, email: true, phone: true, message: true, serviceId: true, locale: true })
+    ),
+    defaultValues: {
+      serviceId: "",
+      fullName: "",
+      email: "",
+      phone: "",
+      message: "",
+      locale: lang === "sw" ? "sw" : "en",
     },
-    {
-      icon: Shield,
-      title: "Audit Defense",
-      description: "Expert representation for IRS and state tax agency audits.",
-      features: [
-        "Direct IRS Correspondence & Representation",
-        "Audit Documentation Preparation and Review",
-        "Penalty Abatement and Resolution Negotiations",
-      ],
-    },
-    {
-      icon: Globe,
-      title: "International & Expat Tax",
-      description: "Seamless compliance for global operations and expatriates.",
-      features: [
-        "Foreign Bank Account (FBAR) & FATCA Reporting",
-        "Foreign Earned Income Exclusion Optimization",
-        "Transfer Pricing and Cross-Border Structuring",
-      ],
-    },
-  ];
+  });
+
+  const selectedServiceId = watch("serviceId");
+
+  const onSubmit = async (values) => {
+    try {
+      const res = await publicApi.submitServiceRequest({
+        ...values,
+        locale: lang === "sw" ? "sw" : "en",
+      });
+      if (res?.success) {
+        toast.success("Request submitted! We'll contact you shortly.");
+        reset();
+      } else {
+        toast.error(res?.message || "Submission failed.");
+      }
+    } catch (err) {
+      toast.error(err?.message || "Unable to submit. Please try again.");
+    }
+  };
 
   return (
     <div>
+      {/* Hero */}
       <section className="py-16 text-center">
         <div className="container">
           <h1 className="text-4xl font-extrabold text-foreground">{t("expertTaxServices")}</h1>
@@ -63,42 +100,43 @@ const Services = () => {
         </div>
       </section>
 
+      {/* Services Grid */}
       <section className="section-alt py-16">
-        <div className="container grid gap-8 md:grid-cols-2 md:items-center">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">{t("newFeature")}</span>
-            <h2 className="mt-4 text-2xl font-bold text-foreground">{t("smartDiagnostic")}</h2>
-            <p className="mt-3 text-muted-foreground">{t("diagnosticDesc")}</p>
-            <Button className="mt-6">{t("runDiagnostic")}</Button>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-6">
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-              <span>STEP 2 OF 4</span>
-              <Building2 className="h-4 w-4" />
+        <div className="container">
+          {isLoading ? (
+            <SkeletonCard count={4} />
+          ) : services.length === 0 ? (
+            <div className="grid gap-6 md:grid-cols-2">
+              {[
+                { icon: Building2, title: t("corporateTax"), description: "Comprehensive tax strategy for enterprises.", features: ["Tax Returns", "Advisory", "R&D Credits"] },
+                { icon: User, title: "Personal Wealth & Tax", description: "Dedicated advisory for high-net-worth individuals.", features: ["Form 1040", "Estate Planning", "Crypto Tax"] },
+                { icon: Shield, title: "Audit Defense", description: "Expert IRS and state audit representation.", features: ["IRS Correspondence", "Documentation", "Negotiations"] },
+                { icon: Globe, title: "International & Expat Tax", description: "Seamless compliance for global operations.", features: ["FBAR & FATCA", "FEIE", "Transfer Pricing"] },
+              ].map((s) => (
+                <ServiceCard key={s.title} {...s} />
+              ))}
             </div>
-            <div className="h-1.5 rounded-full bg-muted mb-6">
-              <div className="h-1.5 w-1/2 rounded-full bg-primary" />
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2">
+              {services.map((service, idx) => {
+                const tr = getTranslation(service);
+                const Icon = fallbackIcons[idx % fallbackIcons.length];
+                return (
+                  <ServiceCard
+                    key={service.id}
+                    icon={Icon}
+                    title={tr?.title || `Service ${service.id}`}
+                    description={tr?.description || ""}
+                    features={tr?.offers || []}
+                  />
+                );
+              })}
             </div>
-            <p className="font-medium text-foreground mb-4">{t("incomeQuestion")}</p>
-            {[t("w2Employment"), t("businessOwner"), t("investmentsCapital")].map((opt, i) => (
-              <label key={opt} className={`flex items-center justify-between rounded-lg border p-3 mb-2 cursor-pointer transition-colors ${i === 1 ? "border-primary bg-secondary" : "border-border hover:bg-muted"}`}>
-                <span className="text-sm text-foreground">{opt}</span>
-                <div className={`h-4 w-4 rounded-full border-2 ${i === 1 ? "border-primary bg-primary" : "border-muted-foreground"}`} />
-              </label>
-            ))}
-            <Button variant="outline" className="mt-4 w-full">{t("continueBtn")}</Button>
-          </div>
+          )}
         </div>
       </section>
 
-      <section className="py-16">
-        <div className="container grid gap-6 md:grid-cols-2">
-          {services.map((s) => (
-            <ServiceCard key={s.title} {...s} />
-          ))}
-        </div>
-      </section>
-
+      {/* Quick Contact */}
       <section className="section-alt py-16">
         <div className="container grid gap-10 md:grid-cols-2 md:items-start">
           <div>
@@ -109,46 +147,94 @@ const Services = () => {
                 <span className="text-primary">📞</span>
                 <div>
                   <p className="font-semibold text-sm text-foreground">{t("directLine")}</p>
-                  <p className="text-xs text-muted-foreground">+1 (800) 555-0199</p>
+                  <p className="text-xs text-muted-foreground">+255 (0) 800 000 000</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-primary">✉️</span>
                 <div>
                   <p className="font-semibold text-sm text-foreground">{t("emailSupport")}</p>
-                  <p className="text-xs text-muted-foreground">advisory@taxpro.example.com</p>
+                  <p className="text-xs text-muted-foreground">info@taxproconsult.co.tz</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="rounded-xl border border-border bg-card p-6 space-y-4"
+            noValidate
+          >
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">{t("fullName")}</label>
-              <Input placeholder="e.g. Jane Smith" />
+              <label htmlFor="svc-fullname" className="mb-1.5 block text-sm font-medium text-foreground">
+                {t("fullName")} <span className="text-destructive">*</span>
+              </label>
+              <Input id="svc-fullname" placeholder="e.g. Jane Smith" {...register("fullName")}
+                className={errors.fullName ? "border-destructive" : ""} />
+              {errors.fullName && <p className="mt-1 text-xs text-destructive">{errors.fullName.message}</p>}
             </div>
+
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">{t("emailAddress")}</label>
-              <Input type="email" placeholder="jane.smith@example.com" />
+              <label htmlFor="svc-email" className="mb-1.5 block text-sm font-medium text-foreground">
+                {t("emailAddress")} <span className="text-destructive">*</span>
+              </label>
+              <Input id="svc-email" type="email" placeholder="jane@example.com" {...register("email")}
+                className={errors.email ? "border-destructive" : ""} />
+              {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
             </div>
+
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">{t("selectServiceShort")}</label>
-              <Select>
-                <SelectTrigger><SelectValue placeholder={t("selectServiceShort")} /></SelectTrigger>
+              <label htmlFor="svc-phone" className="mb-1.5 block text-sm font-medium text-foreground">
+                {t("phone")} <span className="text-destructive">*</span>
+              </label>
+              <Input id="svc-phone" type="tel" placeholder="255712345678" {...register("phone")}
+                className={errors.phone ? "border-destructive" : ""} />
+              {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="svc-service" className="mb-1.5 block text-sm font-medium text-foreground">
+                {t("selectServiceShort")} <span className="text-destructive">*</span>
+              </label>
+              <Select
+                value={selectedServiceId?.toString() || ""}
+                onValueChange={(val) => setValue("serviceId", val, { shouldValidate: true })}
+              >
+                <SelectTrigger id="svc-service" className={errors.serviceId ? "border-destructive" : ""}>
+                  <SelectValue placeholder={t("selectServiceShort")} />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="corporate">{t("corporateTax")}</SelectItem>
-                  <SelectItem value="personal">Personal Wealth & Tax</SelectItem>
-                  <SelectItem value="audit">Audit Defense</SelectItem>
-                  <SelectItem value="international">International & Expat Tax</SelectItem>
+                  {services.map((s) => {
+                    const tr = getTranslation(s);
+                    return (
+                      <SelectItem key={s.id} value={s.id?.toString()}>
+                        {tr?.title || `Service ${s.id}`}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
+              {errors.serviceId && <p className="mt-1 text-xs text-destructive">{errors.serviceId.message}</p>}
             </div>
+
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">{t("additionalInfo")}</label>
-              <Textarea placeholder="Please briefly describe your current tax situation..." rows={4} />
+              <label htmlFor="svc-msg" className="mb-1.5 block text-sm font-medium text-foreground">
+                {t("additionalInfo")} <span className="text-destructive">*</span>
+              </label>
+              <Textarea id="svc-msg" placeholder="Please briefly describe your situation..." rows={4}
+                {...register("message")} className={errors.message ? "border-destructive" : ""} />
+              {errors.message && <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>}
             </div>
-            <Button className="w-full">{t("submitRequest")}</Button>
+
+            <Button id="svc-submit-btn" type="submit" className="w-full gradient-primary text-primary-foreground" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting…</>
+              ) : (
+                <>{t("submitRequest")} <ArrowRight className="ml-2 h-4 w-4" /></>
+              )}
+            </Button>
             <p className="text-center text-xs text-muted-foreground">{t("secureNote")}</p>
-          </div>
+          </form>
         </div>
       </section>
     </div>

@@ -1,125 +1,363 @@
 // File: src/pages/ServiceRequest.jsx
-import { useState } from "react";
+// Public service request form — connected to POST /service-requests
+// Zod validation + react-hook-form + Sonner toasts + Skeleton loading
+
 import { Link } from "react-router-dom";
-import { ArrowLeft, Building2, User, Globe, Shield, Clock, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Building2, User, Globe, Shield, Clock, CheckCircle2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { publicApi, servicesApi } from "@/lib/api";
+import { serviceRequestSchema } from "@/lib/schemas";
+import { SkeletonForm } from "@/components/ui/skeleton";
+import { useState } from "react";
 
-const serviceOptions = [
-  { value: "corporate", label: "Corporate Tax Planning", desc: "Business returns, restructuring & R&D credits", icon: Building2 },
-  { value: "individual", label: "Individual Wealth & Tax", desc: "High-net-worth individual tax preparation", icon: User },
-  { value: "international", label: "International & Expat Tax", desc: "Cross-border taxation and reporting", icon: Globe },
-  { value: "estate", label: "Estate & Trust Planning", desc: "Wealth transfer and succession strategies", icon: Shield },
-  { value: "audit", label: "IRS Audit & Controversy", desc: "Representation for tax disputes and audits", icon: Clock },
-];
+const fallbackIcons = [Building2, User, Globe, Shield, Clock];
 
 const ServiceRequest = () => {
-  const [selectedService, setSelectedService] = useState("corporate");
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const [submitted, setSubmitted] = useState(false);
+
+  // Fetch real services from the API
+  const { data: servicesData, isLoading: servicesLoading } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const res = await servicesApi.list();
+      return res?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const services = servicesData || [];
+
+  // Helper — get translation for current lang from service object
+  const getServiceTranslation = (service) => {
+    const translations = service?.translations || [];
+    return (
+      translations.find(
+        (tr) => tr?.language?.code === lang || tr?.language?.code === "en"
+      ) ||
+      translations[0] ||
+      null
+    );
+  };
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(serviceRequestSchema),
+    defaultValues: {
+      serviceId: "",
+      fullName: "",
+      email: "",
+      phone: "",
+      message: "",
+      locale: lang === "sw" ? "sw" : "en",
+    },
+  });
+
+  const selectedServiceId = watch("serviceId");
+
+  const onSubmit = async (values) => {
+    try {
+      const res = await publicApi.submitServiceRequest({
+        ...values,
+        locale: lang === "sw" ? "sw" : "en",
+      });
+
+      if (res?.success) {
+        toast.success(
+          "Your request has been submitted! We'll contact you shortly.",
+          { duration: 6000 }
+        );
+        setSubmitted(true);
+        reset();
+      } else {
+        toast.error(res?.message || "Submission failed. Please try again.");
+      }
+    } catch (err) {
+      toast.error(
+        err?.message || "Unable to submit request. Please check your connection."
+      );
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="py-10">
+        <div className="container">
+          <div className="mx-auto max-w-lg text-center py-16">
+            <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 mb-6">
+              <CheckCircle2 className="h-10 w-10 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground mb-3">
+              Request Submitted Successfully!
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              Thank you for reaching out. Our team will review your request and
+              get back to you within 24 hours.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => setSubmitted(false)} variant="outline">
+                Submit Another Request
+              </Button>
+              <Button asChild>
+                <Link to="/">
+                  Back to Home
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-10">
       <div className="container">
-        <Link to="/services" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
-          <ArrowLeft className="h-4 w-4" /> {t("backToServices")}
+        <Link
+          to="/services"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t("backToServices")}
         </Link>
-        <h1 className="text-3xl font-extrabold text-foreground">{t("serviceRequest")}</h1>
+
+        <h1 className="text-3xl font-extrabold text-foreground">
+          {t("serviceRequest")}
+        </h1>
         <p className="mt-2 text-muted-foreground">{t("serviceRequestDesc")}</p>
 
         <div className="mt-10 mx-auto max-w-2xl">
-          <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">{t("selectedService")}</label>
-              <Select value={selectedService} onValueChange={setSelectedService}>
-                <SelectTrigger className="h-14">
-                  <SelectValue>
-                    {(() => {
-                      const selected = serviceOptions.find(o => o.value === selectedService);
-                      if (!selected) return null;
-                      const SelIcon = selected.icon;
-                      return (
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                            <SelIcon className="h-4 w-4 text-secondary-foreground" />
-                          </div>
-                          <span className="font-medium text-foreground">{selected.label}</span>
-                        </div>
-                      );
-                    })()}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {serviceOptions.map((opt) => {
-                    const OptIcon = opt.icon;
-                    return (
-                      <SelectItem key={opt.value} value={opt.value} className="py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                            <OptIcon className="h-4 w-4 text-secondary-foreground" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-foreground">{opt.label}</span>
-                            <span className="text-xs text-muted-foreground">{opt.desc}</span>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+          {servicesLoading ? (
+            <div className="rounded-xl border border-border bg-card p-6">
+              <SkeletonForm fields={5} />
             </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
+          ) : (
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="rounded-xl border border-border bg-card p-6 space-y-5"
+              noValidate
+            >
+              {/* Service Selection */}
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">{t("firstName")}</label>
-                <Input placeholder="Jane" />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">{t("lastName")}</label>
-                <Input placeholder="Smith" />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">{t("companyName")}</label>
-              <Input placeholder="Acme Corp LLC" />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">{t("workEmail")}</label>
-                <Input type="email" placeholder="jane@acmecorp.com" />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">
-                  {t("phoneNumber")} <span className="text-muted-foreground">({t("optional")})</span>
+                <label
+                  htmlFor="req-service"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  {t("selectedService")} <span className="text-destructive">*</span>
                 </label>
-                <Input type="tel" placeholder="+1 (555) 000-0000" />
+                <Select
+                  value={selectedServiceId?.toString() || ""}
+                  onValueChange={(val) =>
+                    setValue("serviceId", val, { shouldValidate: true })
+                  }
+                >
+                  <SelectTrigger
+                    id="req-service"
+                    className={`h-12 ${errors.serviceId ? "border-destructive" : ""}`}
+                  >
+                    <SelectValue placeholder={t("selectedService")}>
+                      {services.length > 0 && selectedServiceId
+                        ? (() => {
+                            const s = services.find(
+                              (sv) => sv.id?.toString() === selectedServiceId?.toString()
+                            );
+                            const tr = s ? getServiceTranslation(s) : null;
+                            const Icon =
+                              fallbackIcons[services.indexOf(s) % fallbackIcons.length] ||
+                              Building2;
+                            return tr ? (
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                                  <Icon className="h-4 w-4 text-secondary-foreground" />
+                                </div>
+                                <span className="font-medium text-foreground">
+                                  {tr.title}
+                                </span>
+                              </div>
+                            ) : null;
+                          })()
+                        : null}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.length === 0 ? (
+                      <SelectItem value="0" disabled>
+                        No services available
+                      </SelectItem>
+                    ) : (
+                      services.map((service, idx) => {
+                        const tr = getServiceTranslation(service);
+                        const Icon =
+                          fallbackIcons[idx % fallbackIcons.length] || Building2;
+                        return (
+                          <SelectItem
+                            key={service.id}
+                            value={service.id?.toString()}
+                            className="py-3"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                                <Icon className="h-4 w-4 text-secondary-foreground" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-foreground">
+                                  {tr?.title || service.id}
+                                </span>
+                                {tr?.description && (
+                                  <span className="text-xs text-muted-foreground line-clamp-1">
+                                    {tr.description}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </SelectItem>
+                        );
+                      })
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.serviceId && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {errors.serviceId.message}
+                  </p>
+                )}
               </div>
-            </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">{t("projectDetails")}</label>
-              <Textarea placeholder={t("projectPlaceholder")} rows={5} />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">
-                {t("supportingDocs")} <span className="text-muted-foreground">({t("optional")})</span>
-              </label>
-              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border py-8 px-4 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm font-medium text-foreground">{t("clickUpload")}</p>
-                <p className="text-xs text-muted-foreground">{t("fileTypes")}</p>
+              {/* Full Name */}
+              <div>
+                <label
+                  htmlFor="req-fullname"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  {t("fullName")} <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  id="req-fullname"
+                  placeholder="Jane Doe"
+                  {...register("fullName")}
+                  className={errors.fullName ? "border-destructive" : ""}
+                />
+                {errors.fullName && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {errors.fullName.message}
+                  </p>
+                )}
               </div>
-            </div>
 
-            <Button className="w-full" size="lg">{t("submitSecure")}</Button>
-            <p className="text-center text-xs text-muted-foreground">{t("encryptedNote")}</p>
-          </div>
+              {/* Email + Phone */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="req-email"
+                    className="mb-1.5 block text-sm font-medium text-foreground"
+                  >
+                    {t("workEmail")} <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    id="req-email"
+                    type="email"
+                    placeholder="jane@example.com"
+                    autoComplete="email"
+                    {...register("email")}
+                    className={errors.email ? "border-destructive" : ""}
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-destructive">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label
+                    htmlFor="req-phone"
+                    className="mb-1.5 block text-sm font-medium text-foreground"
+                  >
+                    {t("phone")} <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    id="req-phone"
+                    type="tel"
+                    placeholder="255712345678"
+                    {...register("phone")}
+                    className={errors.phone ? "border-destructive" : ""}
+                  />
+                  {errors.phone && (
+                    <p className="mt-1 text-xs text-destructive">
+                      {errors.phone.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Message */}
+              <div>
+                <label
+                  htmlFor="req-message"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  {t("projectDetails")} <span className="text-destructive">*</span>
+                </label>
+                <Textarea
+                  id="req-message"
+                  placeholder={t("projectPlaceholder")}
+                  rows={5}
+                  {...register("message")}
+                  className={errors.message ? "border-destructive" : ""}
+                />
+                {errors.message && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {errors.message.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit */}
+              <Button
+                id="req-submit-btn"
+                type="submit"
+                className="w-full gradient-primary text-primary-foreground"
+                size="lg"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting…
+                  </>
+                ) : (
+                  <>
+                    {t("submitSecure")}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+
+              <p className="text-center text-xs text-muted-foreground">
+                {t("encryptedNote")}
+              </p>
+            </form>
+          )}
         </div>
       </div>
     </div>

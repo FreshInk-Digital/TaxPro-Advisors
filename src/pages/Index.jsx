@@ -13,7 +13,12 @@ import {
   Users,
   Award,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +35,9 @@ import heroImage2 from "@/assets/hero-2.jpg";
 import heroImage3 from "@/assets/hero-3.jpg";
 import heroImage4 from "@/assets/hero-4.jpg";
 import { fetchHomePageData } from "@/lib/homePage";
+import { publicApi, servicesApi } from "@/lib/api";
+import { serviceRequestSchema } from "@/lib/schemas";
+import { SkeletonHero, SkeletonStats } from "@/components/ui/skeleton";
 
 const heroImages = [heroImage1, heroImage2, heroImage3, heroImage4];
 const statIcons = [Users, TrendingUp, Award, Star];
@@ -147,11 +155,10 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="container py-24">
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-          <p className="text-sm text-muted-foreground">
-            Loading home page content...
-          </p>
+      <div>
+        <SkeletonHero />
+        <div className="container py-4">
+          <SkeletonStats count={4} />
         </div>
       </div>
     );
@@ -435,73 +442,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-
-          <div className="rounded-2xl border border-border bg-card p-8 shadow-lg">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">
-                  First Name
-                </label>
-                <Input placeholder="e.g. Jane" />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">
-                  Last Name
-                </label>
-                <Input placeholder="e.g. Doe" />
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="mb-1.5 block text-sm font-medium text-foreground">
-                Email Address
-              </label>
-              <Input type="email" placeholder="jane@company.com" />
-            </div>
-
-            <div className="mt-4">
-              <label className="mb-1.5 block text-sm font-medium text-foreground">
-                Service Requested
-              </label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select service" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="corporate">Corporate Tax</SelectItem>
-                  <SelectItem value="individual">
-                    Individual Consulting
-                  </SelectItem>
-                  <SelectItem value="international">
-                    International & Expat Tax
-                  </SelectItem>
-                  <SelectItem value="estate">
-                    Estate & Trust Planning
-                  </SelectItem>
-                  <SelectItem value="audit">IRS Audit & Controversy</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="mt-4">
-              <label className="mb-1.5 block text-sm font-medium text-foreground">
-                Your Message
-              </label>
-              <Textarea
-                placeholder="Tell us about your tax situation..."
-                rows={4}
-              />
-            </div>
-
-            <Button
-              className="mt-6 w-full gradient-primary text-primary-foreground shadow-md transition-shadow hover:shadow-lg"
-              size="lg"
-            >
-              Send Request
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
+          <IndexContactForm stats={stats} lang={lang} />
         </div>
       </section>
 
@@ -600,3 +541,155 @@ const Index = () => {
 };
 
 export default Index;
+
+// ---------------------------------------------------------------------------
+// IndexContactForm — home page inline service request form
+// ---------------------------------------------------------------------------
+const IndexContactForm = ({ lang }) => {
+  const { data: servicesData } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const res = await servicesApi.list();
+      return res?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const services = servicesData || [];
+
+  const getTranslation = (service) => {
+    const translations = service?.translations || [];
+    return (
+      translations.find((tr) => tr?.language?.code === lang) ||
+      translations.find((tr) => tr?.language?.code === "en") ||
+      translations[0] ||
+      null
+    );
+  };
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(serviceRequestSchema),
+    defaultValues: {
+      serviceId: "",
+      fullName: "",
+      email: "",
+      phone: "",
+      message: "",
+      locale: lang === "sw" ? "sw" : "en",
+    },
+  });
+
+  const selectedServiceId = watch("serviceId");
+
+  const onSubmit = async (values) => {
+    try {
+      const res = await publicApi.submitServiceRequest({
+        ...values,
+        locale: lang === "sw" ? "sw" : "en",
+      });
+      if (res?.success) {
+        toast.success("Request submitted! We'll contact you shortly.", { duration: 5000 });
+        reset();
+      } else {
+        toast.error(res?.message || "Submission failed. Please try again.");
+      }
+    } catch (err) {
+      toast.error(err?.message || "Unable to submit. Please check your connection.");
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="rounded-2xl border border-border bg-card p-8 shadow-lg space-y-4"
+      noValidate
+    >
+      {/* Full Name */}
+      <div>
+        <label htmlFor="idx-fullname" className="mb-1.5 block text-sm font-medium text-foreground">
+          Full Name <span className="text-destructive">*</span>
+        </label>
+        <Input id="idx-fullname" placeholder="e.g. Jane Doe" {...register("fullName")}
+          className={errors.fullName ? "border-destructive" : ""} />
+        {errors.fullName && <p className="mt-1 text-xs text-destructive">{errors.fullName.message}</p>}
+      </div>
+
+      {/* Email */}
+      <div>
+        <label htmlFor="idx-email" className="mb-1.5 block text-sm font-medium text-foreground">
+          Email Address <span className="text-destructive">*</span>
+        </label>
+        <Input id="idx-email" type="email" placeholder="jane@company.com" {...register("email")}
+          className={errors.email ? "border-destructive" : ""} />
+        {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
+      </div>
+
+      {/* Phone */}
+      <div>
+        <label htmlFor="idx-phone" className="mb-1.5 block text-sm font-medium text-foreground">
+          Phone (255...) <span className="text-destructive">*</span>
+        </label>
+        <Input id="idx-phone" type="tel" placeholder="255712345678" {...register("phone")}
+          className={errors.phone ? "border-destructive" : ""} />
+        {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
+      </div>
+
+      {/* Service */}
+      <div>
+        <label htmlFor="idx-service" className="mb-1.5 block text-sm font-medium text-foreground">
+          Service Requested <span className="text-destructive">*</span>
+        </label>
+        <Select
+          value={selectedServiceId?.toString() || ""}
+          onValueChange={(val) => setValue("serviceId", val, { shouldValidate: true })}
+        >
+          <SelectTrigger id="idx-service" className={errors.serviceId ? "border-destructive" : ""}>
+            <SelectValue placeholder="Select service" />
+          </SelectTrigger>
+          <SelectContent>
+            {services.map((s) => {
+              const tr = getTranslation(s);
+              return (
+                <SelectItem key={s.id} value={s.id?.toString()}>
+                  {tr?.title || `Service ${s.id}`}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        {errors.serviceId && <p className="mt-1 text-xs text-destructive">{errors.serviceId.message}</p>}
+      </div>
+
+      {/* Message */}
+      <div>
+        <label htmlFor="idx-message" className="mb-1.5 block text-sm font-medium text-foreground">
+          Your Message <span className="text-destructive">*</span>
+        </label>
+        <Textarea id="idx-message" placeholder="Tell us about your tax situation..." rows={4}
+          {...register("message")} className={errors.message ? "border-destructive" : ""} />
+        {errors.message && <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>}
+      </div>
+
+      <Button
+        id="idx-submit-btn"
+        type="submit"
+        className="w-full gradient-primary text-primary-foreground shadow-md transition-shadow hover:shadow-lg"
+        size="lg"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…</>
+        ) : (
+          <>Send Request <ArrowRight className="ml-2 h-4 w-4" /></>
+        )}
+      </Button>
+    </form>
+  );
+};

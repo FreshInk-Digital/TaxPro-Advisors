@@ -11,5 +11,12 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      "/api": {
+        target: "https://taxproconsult.co.tz",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

@@ -1,8 +1,7 @@
 // File: src/App.jsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Navbar from "@/components/Navbar";
@@ -15,11 +14,20 @@ import Posters from "./pages/Posters";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
+import { getToken } from "@/lib/api";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 2 * 60 * 1000, // 2 minutes
+    },
+  },
+});
 
 const ProtectedAdmin = () => {
-  const isAuth = sessionStorage.getItem("adminAuth") === "true";
+  const isAuth =
+    sessionStorage.getItem("adminAuth") === "true" && !!getToken();
   return isAuth ? <Admin /> : <Navigate to="/admin/login" replace />;
 };
 
@@ -55,8 +63,17 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <LanguageProvider>
-        <Toaster />
-        <Sonner />
+        {/* Sonner Toast — Top-Right with richColors */}
+        <Toaster
+          position="top-right"
+          richColors
+          expand={false}
+          closeButton
+          duration={4000}
+          toastOptions={{
+            style: { fontFamily: "inherit" },
+          }}
+        />
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>
