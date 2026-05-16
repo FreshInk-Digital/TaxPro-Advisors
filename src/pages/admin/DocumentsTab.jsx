@@ -16,13 +16,19 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { documentsApi, documentTypesApi, languagesApi } from "@/lib/api";
+import { documentsApi, documentTypesApi, languagesApi, resolveAssetUrl } from "@/lib/api";
 import { documentSchema } from "@/lib/schemas";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ContentHeader } from "@/components/admin/ContentHeader";
 import { cn } from "@/lib/utils";
 import { useResponseDialog } from "@/components/ui/response-dialog";
+
+const getDocumentDownloadUrl = (doc) =>
+  resolveAssetUrl(doc?.downloadUrl || doc?.download_url || doc?.file_url || doc?.documentUrl || doc?.document_url);
+
+const getDocumentFileUrl = (doc) =>
+  resolveAssetUrl(doc?.documentUrl || doc?.document_url || doc?.file_url || doc?.downloadUrl || doc?.download_url);
 
 export const DocumentsTab = () => {
   const { t } = useLanguage();
@@ -346,9 +352,9 @@ export const DocumentsTab = () => {
                             </div>
                             <div className="flex flex-col">
                               <span className="font-semibold text-foreground">{titleToShow}</span>
-                              {doc.documentUrl ? (
+                              {getDocumentFileUrl(doc) ? (
                                 <a 
-                                  href={doc.downloadUrl} 
+                                  href={getDocumentDownloadUrl(doc)} 
                                   target="_blank" 
                                   rel="noopener noreferrer" 
                                   className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-0.5 cursor-pointer font-bold"
@@ -690,8 +696,9 @@ export const DocumentsTab = () => {
             <button
               onClick={() => {
                 const doc = paginatedData.find(d => d.id === showActionMenu);
-                if (doc && doc.downloadUrl) {
-                  window.open(doc.downloadUrl, '_blank');
+                const downloadUrl = getDocumentDownloadUrl(doc);
+                if (downloadUrl) {
+                  window.open(downloadUrl, '_blank');
                 } else {
                   toast.error("Download link not available");
                 }

@@ -124,15 +124,31 @@ const serviceTranslationSchema = translationBaseSchema.extend({
   description: z
     .string({ required_error: "Description is required" })
     .min(10, "Description must be at least 10 characters"),
-  offers: z.array(z.string().min(1)).min(1, "At least one offer is required"),
+  offers: z
+    .array(z.string().trim().min(1, "Offer is required"))
+    .min(1, "At least one offer is required"),
 });
 
-export const serviceSchema = z.object({
-  status: z.enum(["active", "notActive"]).default("active"),
-  translations: z
-    .array(serviceTranslationSchema)
-    .min(1, "At least one translation is required"),
-});
+export const serviceSchema = z
+  .object({
+    status: z.enum(["active", "notActive"]).default("active"),
+    translations: z
+      .array(serviceTranslationSchema)
+      .min(1, "At least one translation is required"),
+  })
+  .superRefine((data, ctx) => {
+    const offerCount = data.translations[0]?.offers?.length || 0;
+
+    data.translations.forEach((translation, index) => {
+      if ((translation.offers?.length || 0) !== offerCount) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["translations", index, "offers"],
+          message: "Every language must have the same number of translated offers",
+        });
+      }
+    });
+  });
 
 // --------------------------------------------------------------------------
 // Document Type Schema (multi-language)

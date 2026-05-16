@@ -42,6 +42,7 @@ const Services = () => {
   const getTranslation = (service) => {
     const translations = service?.translations || [];
     return (
+      (service?.translation?.title ? service.translation : null) ||
       translations.find((tr) => tr?.language?.code === lang) ||
       translations.find((tr) => tr?.language?.code === "en") ||
       translations[0] ||

@@ -35,7 +35,7 @@ import heroImage2 from "@/assets/hero-2.jpg";
 import heroImage3 from "@/assets/hero-3.jpg";
 import heroImage4 from "@/assets/hero-4.jpg";
 import { fetchHomePageData } from "@/lib/homePage";
-import { publicApi, servicesApi } from "@/lib/api";
+import { publicApi, servicesApi, postersApi, resolveAssetUrl } from "@/lib/api";
 import { serviceRequestSchema } from "@/lib/schemas";
 import { SkeletonHero, SkeletonStats } from "@/components/ui/skeleton";
 
@@ -75,6 +75,26 @@ const Index = () => {
 
   const { lang } = useLanguage();
   const activeLocale = lang || "en";
+
+  const { data: apiServicesData } = useQuery({
+    queryKey: ["services", activeLocale],
+    queryFn: async () => {
+      const res = await servicesApi.list(activeLocale);
+      const d = res?.data;
+      return Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: apiPostersData } = useQuery({
+    queryKey: ["posters", activeLocale],
+    queryFn: async () => {
+      const res = await postersApi.list(activeLocale);
+      const d = res?.data;
+      return Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -141,7 +161,43 @@ const Index = () => {
     ? homeData.testimonials
     : [];
 
-  const posters = Array.isArray(homeData?.posters) ? homeData.posters : [];
+  const getServiceTranslation = (service) => {
+    const translations = service?.translations || [];
+    return (
+      (service?.translation?.title ? service.translation : null) ||
+      translations.find((tr) => tr?.language?.code === activeLocale) ||
+      translations.find((tr) => tr?.language?.code === "en") ||
+      translations[0] ||
+      null
+    );
+  };
+
+  const apiServices = Array.isArray(apiServicesData) ? apiServicesData : [];
+  const displayServices = apiServices.length
+    ? apiServices.slice(0, 3).map((service, index) => {
+        const tr = getServiceTranslation(service);
+        const fallback = defaultServiceCards[index % defaultServiceCards.length];
+        return {
+          icon: fallback.icon,
+          title: tr?.title || fallback.title,
+          desc: tr?.description || fallback.desc,
+        };
+      })
+    : defaultServiceCards;
+
+  const getPosterImageUrl = (poster) => resolveAssetUrl(poster?.image_url || poster?.file_url || poster?.posterImage || poster?.image_path);
+  const getPosterTranslation = (poster) => poster?.translations?.[0] || null;
+  const posters = Array.isArray(apiPostersData) && apiPostersData.length
+    ? apiPostersData.slice(0, 4).map((poster) => {
+        const tr = getPosterTranslation(poster);
+        return {
+          title: tr?.title || `Poster #${poster.id}`,
+          description: tr?.description || "",
+          imageUrl: getPosterImageUrl(poster),
+          fileUrl: getPosterImageUrl(poster),
+        };
+      })
+    : (Array.isArray(homeData?.posters) ? homeData.posters : []);
 
   useEffect(() => {
     if (!heroSlides.length) return;
@@ -308,7 +364,7 @@ const Index = () => {
           </p>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {defaultServiceCards.map((s, i) => (
+            {displayServices.map((s, i) => (
               <div
                 key={i}
                 className="animate-fade-in-up rounded-2xl border border-border bg-card p-8 text-left hover-lift"
@@ -469,8 +525,12 @@ const Index = () => {
                 className="animate-fade-in-up rounded-2xl border border-border bg-card p-5 text-left hover-lift"
                 style={{ animationDelay: `${i * 0.1}s`, opacity: 0 }}
               >
-                <div className="mb-4 flex h-36 items-center justify-center rounded-xl bg-gradient-to-br from-secondary to-muted">
-                  <FileText className="h-10 w-10 text-primary/60" />
+                <div className="mb-4 flex aspect-[4/5] items-center justify-center overflow-hidden rounded-xl bg-muted">
+                  {poster.imageUrl ? (
+                    <img src={poster.imageUrl} alt={poster.title} className="h-full w-full object-contain" />
+                  ) : (
+                    <FileText className="h-10 w-10 text-primary/60" />
+                  )}
                 </div>
 
                 <h4 className="text-sm font-bold text-foreground">
@@ -481,13 +541,13 @@ const Index = () => {
                   {poster.description}
                 </p>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4 w-full text-xs"
-                >
-                  Download PDF
-                </Button>
+                {poster.fileUrl && (
+                  <Button variant="outline" size="sm" className="mt-4 w-full text-xs" asChild>
+                    <a href={poster.fileUrl} target="_blank" rel="noreferrer" download>
+                      Download
+                    </a>
+                  </Button>
+                )}
               </div>
             ))}
           </div>
@@ -547,10 +607,11 @@ export default Index;
 // ---------------------------------------------------------------------------
 const IndexContactForm = ({ lang }) => {
   const { data: servicesData } = useQuery({
-    queryKey: ["services"],
+    queryKey: ["services", lang],
     queryFn: async () => {
-      const res = await servicesApi.list();
-      return res?.data || [];
+      const res = await servicesApi.list(lang);
+      const d = res?.data;
+      return Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []);
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -560,6 +621,7 @@ const IndexContactForm = ({ lang }) => {
   const getTranslation = (service) => {
     const translations = service?.translations || [];
     return (
+      (service?.translation?.title ? service.translation : null) ||
       translations.find((tr) => tr?.language?.code === lang) ||
       translations.find((tr) => tr?.language?.code === "en") ||
       translations[0] ||

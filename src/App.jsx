@@ -14,20 +14,27 @@ import Posters from "./pages/Posters";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
-import { getToken } from "@/lib/api";
+import { clearToken, getToken, isTokenExpired } from "@/lib/api";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: (failureCount, error) => {
+        if (error?.status === 401) return false;
+        return failureCount < 1;
+      },
       staleTime: 2 * 60 * 1000, // 2 minutes
     },
   },
 });
 
 const ProtectedAdmin = () => {
-  const isAuth =
-    sessionStorage.getItem("adminAuth") === "true" && !!getToken();
+  if (isTokenExpired()) {
+    clearToken();
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  const isAuth = sessionStorage.getItem("adminAuth") === "true" && !!getToken();
   return isAuth ? <Admin /> : <Navigate to="/admin/login" replace />;
 };
 

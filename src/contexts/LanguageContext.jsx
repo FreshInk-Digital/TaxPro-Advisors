@@ -359,7 +359,6 @@ const uiTranslations = {
     nativeName: "本地名称",
     flagCode: "国旗代码 (例如: cn)",
     confirmDelete: "确定要删除此项目吗？",
-    noData: "暂无数据",
     selectLanguage: "选择语言",
     documentType: "文档类型",
     customFileName: "自定义文件名（可选）",

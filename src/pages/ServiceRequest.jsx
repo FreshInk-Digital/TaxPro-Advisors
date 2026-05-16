@@ -32,10 +32,11 @@ const ServiceRequest = () => {
 
   // Fetch real services from the API
   const { data: servicesData, isLoading: servicesLoading } = useQuery({
-    queryKey: ["services"],
+    queryKey: ["services", lang],
     queryFn: async () => {
-      const res = await servicesApi.list();
-      return res?.data || [];
+      const res = await servicesApi.list(lang);
+      const d = res?.data;
+      return Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []);
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -46,6 +47,7 @@ const ServiceRequest = () => {
   const getServiceTranslation = (service) => {
     const translations = service?.translations || [];
     return (
+      (service?.translation?.title ? service.translation : null) ||
       translations.find(
         (tr) => tr?.language?.code === lang || tr?.language?.code === "en"
       ) ||

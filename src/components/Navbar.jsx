@@ -23,7 +23,7 @@ const Navbar = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border bg-card/90 shadow-sm backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
@@ -32,15 +32,15 @@ const Navbar = () => {
           <span className="text-lg font-bold text-foreground">TaxPro</span>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-1 rounded-xl border border-border bg-muted/30 p-1 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
+              className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                 location.pathname === link.path
-                  ? "text-primary"
-                  : "text-muted-foreground"
+                  ? "bg-card text-primary shadow-sm"
+                  : "text-muted-foreground hover:bg-card/70 hover:text-foreground"
               }`}
             >
               {link.label}
@@ -95,8 +95,12 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 onClick={() => setMobileOpen(false)}
-                className="text-sm font-medium text-muted-foreground hover:text-primary"
-              >
+              className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                location.pathname === link.path
+                  ? "bg-secondary text-secondary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
                 {link.label}
               </Link>
             ))}

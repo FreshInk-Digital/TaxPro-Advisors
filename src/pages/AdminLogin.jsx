@@ -30,14 +30,16 @@ const AdminLogin = () => {
   const onSubmit = async (values) => {
     try {
       const res = await authApi.login(values.email, values.password);
+      const authData = res?.data?.data || res?.data || {};
+      const token = authData.token || authData.accessToken || authData.access_token || res?.token;
+      const expiresAt = authData.expiresAt || authData.expires_at || res?.expiresAt || null;
 
-      if (res?.data?.token) {
-        setToken(res.data.token);
-        sessionStorage.setItem("adminAuth", "true");
+      if (token) {
+        setToken(token, expiresAt);
 
         // Store minimal user info
-        if (res.data?.user) {
-          sessionStorage.setItem("adminUser", JSON.stringify(res.data.user));
+        if (authData?.user) {
+          sessionStorage.setItem("adminUser", JSON.stringify(authData.user));
         }
 
         toast.success("Welcome back! Redirecting to dashboard…");

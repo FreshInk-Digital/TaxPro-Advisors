@@ -1,35 +1,65 @@
 // File: src/pages/Documentation.jsx
 import { useState } from "react";
 import { Search, FileText, Eye, Download } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { documentsApi, resolveAssetUrl } from "@/lib/api";
+import { SkeletonCard } from "@/components/ui/skeleton";
 
-const categories = [
-  { name: "All Documents", count: 42 },
-  { name: "Tax Forms", count: 18 },
-  { name: "Corporate Guidelines", count: 9 },
-  { name: "Individual Tax", count: 6 },
-  { name: "Templates & Checklists", count: 5 },
-  { name: "International Trade", count: 4 },
-];
+const getDocumentDownloadUrl = (doc) =>
+  resolveAssetUrl(doc?.downloadUrl || doc?.download_url || doc?.file_url || doc?.documentUrl || doc?.document_url);
 
-const documents = [
-  { title: "2024 Corporate Tax Checklist", type: "PDF", size: "1.2 MB", date: "Updated Jan 2024", desc: "A complete checklist of required documents and financial statements needed for corporate tax filings." },
-  { title: "Quarterly Estimated Tax Schedule", type: "XLSX", size: "450 KB", date: "Updated Dec 2023", desc: "An interactive spreadsheet to help project and track quarterly estimated tax payments for businesses." },
-  { title: "Employee vs. Contractor Guide", type: "PDF", size: "2.4 MB", date: "Updated Feb 2024", desc: "Official guidelines detailing the tax implications and classification rules for W-2 vs 1099 workers." },
-  { title: "Form W-9 (Blank Form)", type: "PDF", size: "120 KB", date: "Official Form", desc: "Request for Taxpayer Identification Number and Certification form required for U.S. vendors." },
-  { title: "Standard NDA Template", type: "DOCX", size: "35 KB", date: "Template", desc: "A standard mutual Non-Disclosure Agreement template to use before sharing sensitive tax data." },
-  { title: "International Tax Compliance", type: "PDF", size: "3.1 MB", date: "Updated Mar 2024", desc: "Comprehensive overview of FBAR, FATCA, and other cross-border reporting requirements." },
-];
+const getDocumentFileUrl = (doc) =>
+  resolveAssetUrl(doc?.documentUrl || doc?.document_url || doc?.file_url || doc?.downloadUrl || doc?.download_url);
 
 const Documentation = () => {
   const [activeCategory, setActiveCategory] = useState("All Documents");
   const [search, setSearch] = useState("");
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["documents", lang],
+    queryFn: async () => {
+      const res = await documentsApi.list(lang);
+      const d = res?.data;
+      return Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const documents = data || [];
+
+  const getTranslation = (doc) => {
+    const translations = doc?.translations || [];
+    return (
+      (doc?.translation?.title ? doc.translation : null) ||
+      translations.find((tr) => tr?.language?.code === lang) ||
+      translations.find((tr) => tr?.language?.code === "en") ||
+      translations[0] ||
+      null
+    );
+  };
+
+  const categories = [
+    { name: "All Documents", count: documents.length },
+    ...Array.from(new Set(documents.map((doc) => doc.type).filter(Boolean))).map((type) => ({
+      name: type,
+      count: documents.filter((doc) => doc.type === type).length,
+    })),
+  ];
 
   const filtered = documents.filter(
-    (d) => d.title.toLowerCase().includes(search.toLowerCase()) || d.desc.toLowerCase().includes(search.toLowerCase())
+    (doc) => {
+      const tr = getTranslation(doc);
+      const q = search.toLowerCase();
+      const matchesSearch = tr?.title?.toLowerCase().includes(q)
+        || tr?.description?.toLowerCase().includes(q)
+        || doc.type?.toLowerCase().includes(q);
+      const matchesCategory = activeCategory === "All Documents" || doc.type === activeCategory;
+      return matchesSearch && matchesCategory;
+    }
   );
 
   return (
@@ -56,26 +86,55 @@ const Documentation = () => {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {filtered.map((doc) => (
-              <div key={doc.title} className="rounded-xl border border-border bg-card p-5 flex flex-col">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                    <FileText className="h-5 w-5 text-secondary-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground text-sm">{doc.title}</h3>
-                    <p className="text-xs text-muted-foreground">{doc.type} · {doc.size} · {doc.date}</p>
-                  </div>
+          {isLoading ? (
+            <SkeletonCard count={4} />
+          ) : isError ? (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-8 text-center text-sm text-destructive">
+              Could not load documents. Please try again later.
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {filtered.length === 0 ? (
+                <div className="col-span-full rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                  {t("noData")}
                 </div>
-                <p className="text-sm text-muted-foreground flex-1">{doc.desc}</p>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm"><Download className="mr-1.5 h-3.5 w-3.5" /> {t("download")}</Button>
-                  <Button variant="outline" size="sm"><Eye className="mr-1.5 h-3.5 w-3.5" /> {t("preview")}</Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ) : filtered.map((doc) => {
+                const tr = getTranslation(doc);
+                const downloadUrl = getDocumentDownloadUrl(doc);
+                const fileUrl = getDocumentFileUrl(doc);
+                return (
+                  <div key={doc.id} className="rounded-xl border border-border bg-card p-5 flex flex-col">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                        <FileText className="h-5 w-5 text-secondary-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground text-sm">{tr?.title || `Document #${doc.id}`}</h3>
+                        <p className="text-xs text-muted-foreground">{doc.type || "Document"} · {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) : "Available"}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground flex-1">{tr?.description || ""}</p>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" disabled={!downloadUrl} asChild={!!downloadUrl}>
+                        {downloadUrl ? (
+                          <a href={downloadUrl} target="_blank" rel="noreferrer" download><Download className="mr-1.5 h-3.5 w-3.5" /> {t("download")}</a>
+                        ) : (
+                          <span><Download className="mr-1.5 h-3.5 w-3.5" /> {t("download")}</span>
+                        )}
+                      </Button>
+                      <Button variant="outline" size="sm" disabled={!fileUrl} asChild={!!fileUrl}>
+                        {fileUrl ? (
+                          <a href={fileUrl} target="_blank" rel="noreferrer"><Eye className="mr-1.5 h-3.5 w-3.5" /> {t("preview")}</a>
+                        ) : (
+                          <span><Eye className="mr-1.5 h-3.5 w-3.5" /> {t("preview")}</span>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

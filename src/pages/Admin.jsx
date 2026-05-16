@@ -8,7 +8,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { authApi, clearToken } from "@/lib/api";
+import { authApi, clearToken, getToken, isTokenExpired } from "@/lib/api";
 import { AdminTopBar } from "@/components/admin/AdminTopBar";
 import { UserDropdown } from "@/components/admin/UserDropdown";
 
@@ -40,6 +40,33 @@ const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const sessionExpiredHandled = useRef(false);
+
+  useEffect(() => {
+    const handleExpiredSession = () => {
+      if (sessionExpiredHandled.current) return;
+      sessionExpiredHandled.current = true;
+      toast.error("Session Expired please Login Again");
+      navigate("/admin/login", { replace: true });
+    };
+
+    window.addEventListener("admin-session-expired", handleExpiredSession);
+    return () => window.removeEventListener("admin-session-expired", handleExpiredSession);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (isTokenExpired()) {
+      clearToken();
+      toast.error("Session Expired please Login Again");
+      navigate("/admin/login", { replace: true });
+      return;
+    }
+
+    if (!getToken()) {
+      clearToken();
+      navigate("/admin/login", { replace: true });
+    }
+  }, [navigate]);
 
   // Retrieve stored user info
   const storedUser = (() => {

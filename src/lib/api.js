@@ -4,20 +4,106 @@
 // already-localized data in the current user locale (en | sw | zh).
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api/v1").replace(/\/+$/, "");
+let sessionExpiredNotified = false;
+
+export function resolveAssetUrl(value) {
+  if (!value) return null;
+
+  const origin = (() => {
+    try {
+      return new URL(BASE_URL, window.location.origin).origin;
+    } catch {
+      return window.location.origin;
+    }
+  })();
+
+  if (/^(data:|blob:)/i.test(value)) return value;
+  if (/^https?:/i.test(value)) {
+    try {
+      const url = new URL(value);
+      if (url.pathname.startsWith("/storage/") && url.origin !== origin) {
+        return `${origin}${url.pathname}${url.search}`;
+      }
+    } catch {
+      return value;
+    }
+    return value;
+  }
+
+  if (value.startsWith("/")) return `${origin}${value}`;
+  if (value.startsWith("storage/")) return `${origin}/${value}`;
+  return `${origin}/storage/${value}`;
+}
 
 
 // --------------------------------------------------------------------------
 // Token helpers (session-scoped)
 // --------------------------------------------------------------------------
 export function getToken() {
-  return sessionStorage.getItem("adminToken") || null;
+  if (isTokenExpired()) {
+    return null;
+  }
+
+  return (
+    sessionStorage.getItem("adminToken") ||
+    sessionStorage.getItem("authToken") ||
+    sessionStorage.getItem("token") ||
+    null
+  );
 }
-export function setToken(token) {
+export function getTokenExpiresAt() {
+  return sessionStorage.getItem("adminTokenExpiresAt") || null;
+}
+export function isTokenExpired() {
+  const expiresAt = getTokenExpiresAt();
+  if (!expiresAt) return false;
+
+  const expiresAtMs = new Date(expiresAt).getTime();
+  return Number.isFinite(expiresAtMs) && expiresAtMs <= Date.now();
+}
+export function setToken(token, expiresAt = null) {
   sessionStorage.setItem("adminToken", token);
+  sessionStorage.setItem("adminAuth", "true");
+  if (expiresAt) sessionStorage.setItem("adminTokenExpiresAt", expiresAt);
+  else sessionStorage.removeItem("adminTokenExpiresAt");
+  sessionExpiredNotified = false;
 }
 export function clearToken() {
   sessionStorage.removeItem("adminToken");
+  sessionStorage.removeItem("authToken");
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("adminTokenExpiresAt");
   sessionStorage.removeItem("adminAuth");
+  sessionStorage.removeItem("adminUser");
+}
+
+function notifySessionExpired() {
+  clearToken();
+
+  if (sessionExpiredNotified) return;
+  sessionExpiredNotified = true;
+
+  window.dispatchEvent(new CustomEvent("admin-session-expired"));
+}
+
+function isAuthEndpoint(path) {
+  const cleanPath = path.replace(/^\/+/, "");
+  return [
+    "login",
+    "register",
+    "send-otp",
+    "verify-otp",
+    "reset-password",
+  ].some((endpoint) => cleanPath === endpoint);
+}
+
+function isExpiredAuthError(error, data) {
+  const message = [
+    error?.message,
+    typeof data === "object" ? data?.message : data,
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  return message.includes("expired") || isTokenExpired();
 }
 
 // --------------------------------------------------------------------------
@@ -32,9 +118,15 @@ export function getLocale() {
 // All GET requests automatically carry Accept-Language: <current_locale>
 // --------------------------------------------------------------------------
 async function apiFetch(path, options = {}) {
-  const { method = "GET", body, isFormData = false, locale } = options;
+  const { method = "GET", body, isFormData = false, locale, requireAuth = false } = options;
 
   const token = getToken();
+  if (requireAuth && !token) {
+    if (isTokenExpired()) notifySessionExpired();
+    const error = new Error("Session Expired please Login Again");
+    error.status = 401;
+    throw error;
+  }
   // Use explicit locale arg, or fall back to the globally active one
   const activeLocale = locale || getLocale();
 
@@ -76,6 +168,10 @@ async function apiFetch(path, options = {}) {
       const error = new Error(message);
       error.status = res.status;
       error.data = data;
+      if (res.status === 401 && !isAuthEndpoint(path) && (requireAuth || token) && isExpiredAuthError(error, data)) {
+        notifySessionExpired();
+        error.message = "Session Expired please Login Again";
+      }
       throw error;
     }
 
@@ -110,7 +206,7 @@ export const authApi = {
   resetPassword: (email, newPassword) =>
     apiFetch("/reset-password", { method: "POST", body: { email, newPassword } }),
 
-  logout: () => apiFetch("/logout", { method: "POST" }),
+  logout: () => apiFetch("/logout", { method: "POST", requireAuth: true }),
 };
 
 // --------------------------------------------------------------------------
@@ -129,15 +225,15 @@ export const languagesApi = {
   list: (locale) => apiFetch("/languages", { locale }),
 
   create: (payload) =>
-    apiFetch("/languages", { method: "POST", body: payload }),
+    apiFetch("/languages", { method: "POST", body: payload, requireAuth: true }),
 
   update: (id, payload) =>
-    apiFetch(`/languages/${id}`, { method: "PUT", body: payload }),
+    apiFetch(`/languages/${id}`, { method: "PUT", body: payload, requireAuth: true }),
 
-  delete: (id) => apiFetch(`/languages/${id}`, { method: "DELETE" }),
+  delete: (id) => apiFetch(`/languages/${id}`, { method: "DELETE", requireAuth: true }),
 
   bulkDelete: (ids) =>
-    apiFetch("/languages-batch/delete", { method: "DELETE", body: { ids } }),
+    apiFetch("/languages-batch/delete", { method: "DELETE", body: { ids }, requireAuth: true }),
 };
 
 // --------------------------------------------------------------------------
@@ -148,12 +244,15 @@ export const servicesApi = {
   list: (locale) => apiFetch("/services", { locale }),
 
   create: (payload) =>
-    apiFetch("/services", { method: "POST", body: payload }),
+    apiFetch("/services", { method: "POST", body: payload, requireAuth: true }),
 
   update: (id, payload) =>
-    apiFetch(`/services/${id}`, { method: "PUT", body: payload }),
+    apiFetch(`/services/${id}`, { method: "PUT", body: payload, requireAuth: true }),
 
-  delete: (id) => apiFetch(`/services/${id}`, { method: "DELETE" }),
+  delete: (id) => apiFetch(`/services/${id}`, { method: "DELETE", requireAuth: true }),
+
+  bulkDelete: (ids) =>
+    apiFetch("/services-batch/delete", { method: "DELETE", body: { ids }, requireAuth: true }),
 };
 
 // --------------------------------------------------------------------------
@@ -164,18 +263,18 @@ export const documentTypesApi = {
   list: (locale) => apiFetch("/document-types", { locale }),
 
   create: (payload) =>
-    apiFetch("/document-types", { method: "POST", body: payload }),
+    apiFetch("/document-types", { method: "POST", body: payload, requireAuth: true }),
 
   bulkCreate: (documentTypes) =>
-    apiFetch("/document-types/bulk", { method: "POST", body: { documentTypes } }),
+    apiFetch("/document-types/bulk", { method: "POST", body: { documentTypes }, requireAuth: true }),
 
   update: (id, payload) =>
-    apiFetch(`/document-types/${id}`, { method: "PUT", body: payload }),
+    apiFetch(`/document-types/${id}`, { method: "PUT", body: payload, requireAuth: true }),
 
-  delete: (id) => apiFetch(`/document-types/${id}`, { method: "DELETE" }),
+  delete: (id) => apiFetch(`/document-types/${id}`, { method: "DELETE", requireAuth: true }),
 
   bulkDelete: (ids) =>
-    apiFetch("/document-types-batch/delete", { method: "DELETE", body: { ids } }),
+    apiFetch("/document-types-batch/delete", { method: "DELETE", body: { ids }, requireAuth: true }),
 };
 
 // --------------------------------------------------------------------------
@@ -186,7 +285,7 @@ export const documentsApi = {
   list: (locale) => apiFetch("/documents", { locale }),
 
   create: (formData) =>
-    apiFetch("/documents", { method: "POST", body: formData, isFormData: true }),
+    apiFetch("/documents", { method: "POST", body: formData, isFormData: true, requireAuth: true }),
 
   /**
    * Laravel cannot parse multipart PUT — send as POST with _method:"PUT"
@@ -197,10 +296,14 @@ export const documentsApi = {
       method: "POST",
       body: formData,
       isFormData: true,
+      requireAuth: true,
     });
   },
 
-  delete: (id) => apiFetch(`/documents/${id}`, { method: "DELETE" }),
+  delete: (id) => apiFetch(`/documents/${id}`, { method: "DELETE", requireAuth: true }),
+
+  bulkDelete: (ids) =>
+    apiFetch("/documents-batch/delete", { method: "DELETE", body: { ids }, requireAuth: true }),
 };
 
 // --------------------------------------------------------------------------
@@ -211,7 +314,7 @@ export const postersApi = {
   list: (locale) => apiFetch("/posters", { locale }),
 
   create: (formData) =>
-    apiFetch("/posters", { method: "POST", body: formData, isFormData: true }),
+    apiFetch("/posters", { method: "POST", body: formData, isFormData: true, requireAuth: true }),
 
   /**
    * Laravel cannot parse multipart PUT — send as POST with _method:"PUT"
@@ -222,33 +325,38 @@ export const postersApi = {
       method: "POST",
       body: formData,
       isFormData: true,
+      requireAuth: true,
     });
   },
 
-  delete: (id) => apiFetch(`/posters/${id}`, { method: "DELETE" }),
+  delete: (id) => apiFetch(`/posters/${id}`, { method: "DELETE", requireAuth: true }),
+
+  bulkDelete: (ids) =>
+    apiFetch("/posters-batch/delete", { method: "DELETE", body: { ids }, requireAuth: true }),
 };
 
 // --------------------------------------------------------------------------
 // 8. USERS (Admin)
 // --------------------------------------------------------------------------
 export const usersApi = {
-  list: () => apiFetch("/users"),
+  list: () => apiFetch("/users", { requireAuth: true }),
 
   create: (payload) =>
-    apiFetch("/users", { method: "POST", body: payload }),
+    apiFetch("/users", { method: "POST", body: payload, requireAuth: true }),
 
   update: (id, payload) =>
-    apiFetch(`/users/${id}`, { method: "PUT", body: payload }),
+    apiFetch(`/users/${id}`, { method: "PUT", body: payload, requireAuth: true }),
 
-  delete: (id) => apiFetch(`/users/${id}`, { method: "DELETE" }),
+  delete: (id) => apiFetch(`/users/${id}`, { method: "DELETE", requireAuth: true }),
 
   bulkDelete: (ids) =>
-    apiFetch("/users-batch/delete", { method: "DELETE", body: { ids } }),
+    apiFetch("/users-batch/delete", { method: "DELETE", body: { ids }, requireAuth: true }),
 
   changePassword: (id, oldPassword, newPassword) =>
     apiFetch(`/users/${id}/change-password`, {
       method: "PUT",
       body: { oldPassword, newPassword },
+      requireAuth: true,
     }),
 };
 
@@ -256,5 +364,16 @@ export const usersApi = {
 // 9. SERVICE REQUESTS (Admin View)
 // --------------------------------------------------------------------------
 export const serviceRequestsApi = {
-  list: () => apiFetch("/service-requests"),
+  list: (locale) => apiFetch("/admin/service-requests", { locale, requireAuth: true }),
+
+  create: (payload) =>
+    apiFetch("/admin/service-requests", { method: "POST", body: payload, requireAuth: true }),
+
+  update: (id, payload) =>
+    apiFetch(`/admin/service-requests/${id}`, { method: "PUT", body: payload, requireAuth: true }),
+
+  delete: (id) => apiFetch(`/admin/service-requests/${id}`, { method: "DELETE", requireAuth: true }),
+
+  bulkDelete: (ids) =>
+    apiFetch("/admin/service-requests-batch/delete", { method: "DELETE", body: { ids }, requireAuth: true }),
 };

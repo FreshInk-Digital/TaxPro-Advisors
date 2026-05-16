@@ -3,8 +3,10 @@ import { FileText, Download, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
-import { postersApi } from "@/lib/api";
+import { postersApi, resolveAssetUrl } from "@/lib/api";
 import { SkeletonPosters } from "@/components/ui/skeleton";
+
+const getPosterFileUrl = (poster) => resolveAssetUrl(poster?.file_url || poster?.image_url || poster?.posterImage || poster?.image_path);
 
 const Posters = () => {
   const { t, lang } = useLanguage();
@@ -54,17 +56,18 @@ const Posters = () => {
             <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {posters.map((poster) => {
                 const tr = getTranslation(poster);
+                const posterUrl = getPosterFileUrl(poster);
                 return (
                   <div
                     key={poster.id}
-                    className="rounded-xl border border-border bg-card overflow-hidden hover:shadow-md transition-shadow"
+                    className="overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
                   >
-                    <div className="h-40 bg-muted flex items-center justify-center relative overflow-hidden">
-                      {poster.image_url ? (
+                    <div className="relative flex aspect-[4/5] items-center justify-center overflow-hidden bg-muted">
+                      {posterUrl ? (
                         <img
-                          src={poster.image_url}
+                          src={posterUrl}
                           alt={tr?.title || "Poster"}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain"
                         />
                       ) : (
                         <FileText className="h-10 w-10 text-muted-foreground" />
@@ -80,14 +83,14 @@ const Posters = () => {
                       <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
                         {tr?.description || ""}
                       </p>
-                      {poster.file_url && (
+                      {posterUrl && (
                         <Button
                           variant="outline"
                           size="sm"
                           className="mt-3 w-full"
                           asChild
                         >
-                          <a href={poster.file_url} target="_blank" rel="noreferrer" download>
+                          <a href={posterUrl} target="_blank" rel="noreferrer" download>
                             <Download className="mr-1.5 h-3.5 w-3.5" />
                             {t("download")}
                           </a>
