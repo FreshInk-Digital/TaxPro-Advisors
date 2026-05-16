@@ -31,7 +31,7 @@ export const registerSchema = z.object({
   password: z
     .string({ required_error: "Password is required" })
     .min(8, "Password must be at least 8 characters"),
-  role: z.enum(["USER", "ADMIN"]).default("USER"),
+  role: z.enum(["user", "admin"]).default("user"),
 });
 
 export const sendOtpSchema = z.object({
@@ -211,8 +211,8 @@ export const userSchema = z.object({
     .email("Please enter a valid email address"),
   phoneNumber: z
     .string({ required_error: "Phone number is required" })
-    .regex(/^255\d{9}$/, "Phone must start with 255 followed by 9 digits"),
-  role: z.enum(["USER", "ADMIN"]).default("USER"),
+    .regex(/^\d{10,15}$/, "Phone must be 10-15 digits (including country code)"),
+  role: z.enum(["user", "admin"]).default("user"),
 });
 
 export const changePasswordSchema = z

@@ -121,3 +121,108 @@
     box-shadow: 0 12px 30px -8px hsl(var(--primary) / 0.15);
   }
 }
+
+/* ─── Phone Input Component Styles ─────────────────────────────── */
+.phone-input-wrapper {
+  width: 100%;
+}
+
+.phone-input-container {
+  width: 100% !important;
+}
+
+.phone-input-field {
+  width: 100% !important;
+  height: 2.5rem !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid hsl(var(--input)) !important;
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  font-size: 0.875rem !important;
+  padding-left: 3rem !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+
+.phone-input-field:focus {
+  outline: none !important;
+  border-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2) !important;
+}
+
+.phone-input-error {
+  border-color: hsl(var(--destructive)) !important;
+}
+
+.phone-input-error:focus {
+  box-shadow: 0 0 0 2px hsl(var(--destructive) / 0.2) !important;
+}
+
+.phone-input-button {
+  border-radius: 0.75rem 0 0 0.75rem !important;
+  border: 1px solid hsl(var(--input)) !important;
+  border-right: none !important;
+  background-color: hsl(var(--background)) !important;
+  transition: background-color 0.15s !important;
+}
+
+.phone-input-button:hover,
+.phone-input-button.open {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.phone-input-button .selected-flag {
+  border-radius: 0.75rem 0 0 0.75rem !important;
+  background-color: transparent !important;
+  padding: 0 0.5rem 0 0.75rem !important;
+}
+
+.phone-input-button .selected-flag:hover,
+.phone-input-button .selected-flag:focus {
+  background-color: transparent !important;
+}
+
+.phone-input-dropdown {
+  border-radius: 0.75rem !important;
+  border: 1px solid hsl(var(--border)) !important;
+  background-color: hsl(var(--card)) !important;
+  box-shadow: 0 10px 30px -5px rgba(0,0,0,0.15) !important;
+  z-index: 10000 !important;
+}
+
+.phone-input-dropdown .country-list {
+  background-color: hsl(var(--card)) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.25rem !important;
+  max-height: 200px !important;
+}
+
+.phone-input-dropdown .country {
+  border-radius: 0.5rem !important;
+  padding: 0.5rem 0.75rem !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.phone-input-dropdown .country:hover,
+.phone-input-dropdown .country.highlight {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.phone-input-dropdown .country .dial-code {
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 0.75rem !important;
+}
+
+.phone-input-search {
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--input)) !important;
+  border-radius: 0.5rem !important;
+  color: hsl(var(--foreground)) !important;
+  font-size: 0.8rem !important;
+  margin: 0.25rem !important;
+  width: calc(100% - 0.5rem) !important;
+}
+
+.phone-input-search:focus {
+  outline: none !important;
+  border-color: hsl(var(--primary)) !important;
+}

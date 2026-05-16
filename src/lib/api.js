@@ -236,6 +236,9 @@ export const usersApi = {
 
   delete: (id) => apiFetch(`/users/${id}`, { method: "DELETE" }),
 
+  bulkDelete: (ids) =>
+    apiFetch("/users/bulk-delete", { method: "DELETE", body: { ids } }),
+
   changePassword: (id, oldPassword, newPassword) =>
     apiFetch(`/users/${id}/change-password`, {
       method: "PUT",

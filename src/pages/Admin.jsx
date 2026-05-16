@@ -1,20 +1,25 @@
 // File: src/pages/Admin.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Building2, LayoutDashboard, FileEdit, MessageSquare,
-  Globe, Users, Image, LogOut, Menu, X,
+  Globe, Users, Image, LogOut, Menu, X, User, Settings, ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { authApi, clearToken } from "@/lib/api";
-import { DashboardTab } from "./admin/DashboardTab";
-import { ServicesTab } from "./admin/ServicesTab";
-import { PostersTab } from "./admin/PostersTab";
-import { RequestsTab } from "./admin/RequestsTab";
-import { LanguagesTab } from "./admin/LanguagesTab";
-import { UsersTab } from "./admin/UsersTab";
+import { AdminTopBar } from "@/components/admin/AdminTopBar";
+import { UserDropdown } from "@/components/admin/UserDropdown";
+
+// Lazy load tabs for better performance
+const DashboardTab = lazy(() => import("./admin/DashboardTab").then(m => ({ default: m.DashboardTab })));
+const ServicesTab = lazy(() => import("./admin/ServicesTab").then(m => ({ default: m.ServicesTab })));
+const PostersTab = lazy(() => import("./admin/PostersTab").then(m => ({ default: m.PostersTab })));
+const RequestsTab = lazy(() => import("./admin/RequestsTab").then(m => ({ default: m.RequestsTab })));
+const LanguagesTab = lazy(() => import("./admin/LanguagesTab").then(m => ({ default: m.LanguagesTab })));
+const UsersTab = lazy(() => import("./admin/UsersTab").then(m => ({ default: m.UsersTab })));
+const AccountTab = lazy(() => import("./admin/AccountTab").then(m => ({ default: m.AccountTab })));
 
 const sidebarItems = [
   { icon: LayoutDashboard, labelKey: "dashboard", id: "dashboard" },
@@ -23,11 +28,12 @@ const sidebarItems = [
   { icon: MessageSquare, labelKey: "serviceRequests", id: "requests" },
   { icon: Globe, labelKey: "languages", id: "languages" },
   { icon: Users, labelKey: "usersManagement", id: "users" },
+  { icon: User, labelKey: "account", id: "account" },
 ];
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -68,6 +74,7 @@ const Admin = () => {
         case "requests":   return <RequestsTab />;
         case "languages":  return <LanguagesTab />;
         case "users":      return <UsersTab />;
+        case "account":    return <AccountTab />;
         default:           return <DashboardTab />;
       }
     } catch (err) {
@@ -81,90 +88,85 @@ const Admin = () => {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-foreground/20 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static z-30 flex h-full min-h-screen w-64 shrink-0 flex-col border-r border-border bg-card transition-transform duration-300 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-border bg-card transition-all duration-300 ease-in-out ${
+          sidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full md:w-20 md:translate-x-0"
         }`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2 border-b border-border p-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+        <div className={`flex items-center gap-2 border-b border-border p-4 h-16 shrink-0 overflow-hidden ${!sidebarOpen && "md:justify-center"}`}>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
             <Building2 className="h-4 w-4 text-primary-foreground" />
           </div>
-          <div>
-            <span className="font-bold text-foreground text-sm">TaxProConsult</span>
-            <p className="text-[10px] text-muted-foreground leading-none">Admin Portal</p>
-          </div>
+          {sidebarOpen && (
+            <div className="animate-in fade-in duration-300">
+              <span className="font-bold text-foreground text-sm">TaxProConsult</span>
+              <p className="text-[10px] text-muted-foreground leading-none">Admin Portal</p>
+            </div>
+          )}
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+              onClick={() => { setActiveTab(item.id); if (window.innerWidth < 768) setSidebarOpen(false); }}
+              title={!sidebarOpen ? t(item.labelKey) : ""}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 ${
                 activeTab === item.id
-                  ? "bg-primary text-primary-foreground font-medium"
+                  ? "bg-primary text-primary-foreground font-medium shadow-md shadow-primary/20"
                   : "text-muted-foreground hover:bg-muted"
-              }`}
+              } ${!sidebarOpen && "md:justify-center md:px-0"}`}
             >
               <item.icon className="h-4 w-4 shrink-0" />
-              {t(item.labelKey)}
+              {sidebarOpen && <span className="truncate">{t(item.labelKey)}</span>}
             </button>
           ))}
         </nav>
 
-        {/* User + Logout */}
-        <div className="border-t border-border p-4 space-y-3">
-          <Button variant="outline" size="sm" className="w-full" asChild>
+        {/* User Dropdown in Sidebar */}
+        <div className="border-t border-border p-4 space-y-3 shrink-0">
+          <Button variant="outline" size="sm" className={`w-full ${!sidebarOpen && "md:p-0 md:w-10 md:h-10 md:rounded-full"}`} asChild>
             <Link to="/" target="_blank">
-              <Globe className="mr-2 h-3.5 w-3.5" /> View Live Site
+              <Globe className={`${sidebarOpen ? "mr-2" : ""} h-3.5 w-3.5`} /> 
+              {sidebarOpen && "View Site"}
             </Link>
           </Button>
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-              {userInitials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-              <p className="text-xs text-muted-foreground truncate">{storedUser?.email || "admin"}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            {t("logout")}
-          </button>
+          
+          <UserDropdown 
+            user={storedUser} 
+            initials={userInitials} 
+            variant={sidebarOpen ? "sidebar" : "collapsed"}
+          />
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Mobile header */}
-        <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3 md:hidden">
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(true)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <span className="font-semibold text-foreground text-sm">TaxProConsult Admin</span>
-        </header>
+        {/* Main content */}
+        <div className={`flex flex-1 flex-col min-h-screen transition-[padding] duration-300 ease-in-out ${
+          sidebarOpen ? "md:pl-64" : "md:pl-20"
+        }`}>
+          <AdminTopBar 
+            sidebarOpen={sidebarOpen} 
+            setSidebarOpen={setSidebarOpen} 
+            user={storedUser} 
+            initials={userInitials} 
+          />
 
-        <main className="flex-1 overflow-auto p-6 md:p-8">
-          {renderTab()}
-        </main>
-      </div>
+          <main className="flex-1 overflow-x-hidden bg-muted/30 p-4 md:p-6 lg:p-8">
+            <div className="mx-auto max-w-7xl">
+              <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div></div>}>
+                {renderTab()}
+              </Suspense>
+            </div>
+          </main>
+        </div>
     </div>
   );
 };

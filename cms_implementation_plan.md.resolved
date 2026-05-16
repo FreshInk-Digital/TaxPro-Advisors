@@ -1,0 +1,421 @@
+# CMS — Admin-Editable Front-End Content
+## Implementation Plan for TaxProConsult
+
+---
+
+> **Goal**: Every piece of text and media visible to public users on the website (hero sections, About Us, FAQ, navigation labels, calls-to-action, etc.) is stored in the database, multi-language, and editable live from the Admin dashboard — just like Amazon, Shopify, or WordPress, but purpose-built for your stack.
+
+---
+
+## 1. How Amazon / Big Sites Do It (The Pattern)
+
+Amazon and similar platforms use a concept called a **Content Management System (CMS)** backed by a **Key-Value content store** in the database. The core idea is simple:
+
+```
+Every piece of UI text has a unique KEY.
+The database maps that KEY → a VALUE per LANGUAGE.
+The frontend reads from the DB, not from hardcoded strings.
+The admin can update the VALUE at any time.
+```
+
+For example, instead of hardcoding:
+```jsx
+<h1>Welcome to TaxProConsult</h1>
+```
+
+It becomes:
+```jsx
+<h1>{content["hero.title"]}</h1>  // reads from DB, in current language
+```
+
+---
+
+## 2. Your Current Stack Analysis
+
+| Layer | Technology | Status |
+|---|---|---|
+| **Backend** | Laravel (PHP) — `/Applications/XAMPP/xamppfiles/htdocs/service-api` | ✅ Deployed |
+| **Frontend** | React + Vite (TaxPro-Advisors) | ✅ Running |
+| **API Client** | `src/lib/api.js` | ✅ Exists |
+| **Multi-Language** | `LanguageContext`, `translations.js`, Accept-Language header | ✅ Exists |
+| **Admin Portal** | `src/pages/Admin.jsx` + tab system | ✅ Exists |
+| **Auth** | Laravel Sanctum tokens | ✅ Exists |
+| **Existing multi-lang models** | `Service`, `Poster`, `Document` with `*Translation` tables | ✅ Pattern established |
+
+**Your backend already has the exact multi-language pattern we need to follow.** We will extend it, not replace it.
+
+---
+
+## 3. Database Design — Backend (Laravel)
+
+### 3.1 New Migration: `site_contents` table
+
+This is the core CMS table.
+
+```sql
+-- Two tables following your existing *Translation pattern
+
+CREATE TABLE site_contents (
+    id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `key`       VARCHAR(255) NOT NULL,       -- e.g. "hero.title", "about.body"
+    section     VARCHAR(100) NOT NULL,       -- e.g. "hero", "about", "navbar", "faq"
+    type        ENUM('text','html','image','json') DEFAULT 'text',
+    sort_order  INT DEFAULT 0,
+    is_active   BOOLEAN DEFAULT TRUE,
+    created_at  TIMESTAMP NULL,
+    updated_at  TIMESTAMP NULL,
+    UNIQUE KEY `site_contents_key_unique` (`key`)
+);
+
+CREATE TABLE site_content_translations (
+    id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    siteContentId   BIGINT UNSIGNED NOT NULL,
+    languageId      BIGINT UNSIGNED NOT NULL,
+    value           LONGTEXT,               -- the actual content in this language
+    created_at      TIMESTAMP NULL,
+    updated_at      TIMESTAMP NULL,
+    FOREIGN KEY (siteContentId) REFERENCES site_contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (languageId) REFERENCES languages(id) ON DELETE CASCADE,
+    UNIQUE KEY `content_lang_unique` (`siteContentId`, `languageId`)
+);
+```
+
+### 3.2 Seeder — Default Content Keys
+
+Pre-populate all content keys so the admin can immediately see and edit them:
+
+```php
+// Pages and their keys (matching your Index.jsx, Services.jsx, etc.)
+$keys = [
+    // ── Hero Section ──────────────────────────────
+    ['key' => 'hero.badge',       'section' => 'hero',    'type' => 'text'],
+    ['key' => 'hero.title',       'section' => 'hero',    'type' => 'text'],
+    ['key' => 'hero.subtitle',    'section' => 'hero',    'type' => 'html'],
+    ['key' => 'hero.cta_primary', 'section' => 'hero',    'type' => 'text'],
+    ['key' => 'hero.cta_secondary','section'=> 'hero',    'type' => 'text'],
+    ['key' => 'hero.image',       'section' => 'hero',    'type' => 'image'],
+
+    // ── About Section ─────────────────────────────
+    ['key' => 'about.title',      'section' => 'about',   'type' => 'text'],
+    ['key' => 'about.body',       'section' => 'about',   'type' => 'html'],
+    ['key' => 'about.stats',      'section' => 'about',   'type' => 'json'], // [{label, value}]
+
+    // ── Services Section ──────────────────────────
+    ['key' => 'services.title',   'section' => 'services','type' => 'text'],
+    ['key' => 'services.subtitle','section' => 'services','type' => 'text'],
+
+    // ── FAQ Section ───────────────────────────────
+    ['key' => 'faq.title',        'section' => 'faq',     'type' => 'text'],
+    ['key' => 'faq.items',        'section' => 'faq',     'type' => 'json'], // [{q, a}]
+
+    // ── Contact / CTA Section ─────────────────────
+    ['key' => 'contact.title',    'section' => 'contact', 'type' => 'text'],
+    ['key' => 'contact.subtitle', 'section' => 'contact', 'type' => 'text'],
+    ['key' => 'contact.email',    'section' => 'contact', 'type' => 'text'],
+    ['key' => 'contact.phone',    'section' => 'contact', 'type' => 'text'],
+
+    // ── Navbar ────────────────────────────────────
+    ['key' => 'nav.home',         'section' => 'navbar',  'type' => 'text'],
+    ['key' => 'nav.services',     'section' => 'navbar',  'type' => 'text'],
+    ['key' => 'nav.about',        'section' => 'navbar',  'type' => 'text'],
+    ['key' => 'nav.contact',      'section' => 'navbar',  'type' => 'text'],
+
+    // ── Footer ────────────────────────────────────
+    ['key' => 'footer.tagline',   'section' => 'footer',  'type' => 'text'],
+    ['key' => 'footer.copyright', 'section' => 'footer',  'type' => 'text'],
+];
+```
+
+---
+
+## 4. Backend — Laravel Implementation
+
+### 4.1 New Files to Create in `/Applications/XAMPP/xamppfiles/htdocs/service-api/`
+
+```
+app/
+  Models/
+    SiteContent.php                       ← New
+    SiteContentTranslation.php            ← New
+  Http/
+    Controllers/Api/v1/
+      SiteContentController.php           ← New
+    Requests/
+      SiteContentRequest.php              ← New
+    Resources/
+      SiteContentResource.php             ← New
+database/
+  migrations/
+    2026_05_16_create_site_contents_table.php         ← New
+    2026_05_16_create_site_content_translations_table.php ← New
+  seeders/
+    SiteContentSeeder.php                 ← New
+```
+
+### 4.2 API Endpoints to Add in `routes/api.php`
+
+```php
+// ── Site Content (CMS) ─────────────────────────────────────────
+// PUBLIC: Frontend reads all content by locale (no auth needed)
+Route::get('/site-content', [SiteContentController::class, 'index']);
+Route::get('/site-content/{key}', [SiteContentController::class, 'show']);
+
+// PROTECTED: Admin writes content
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/admin/site-content', [SiteContentController::class, 'adminIndex']);
+    Route::put('/site-content/{id}', [SiteContentController::class, 'update']);
+    Route::post('/site-content/{id}/translations', [SiteContentController::class, 'upsertTranslation']);
+    Route::post('/site-content/image', [SiteContentController::class, 'uploadImage']);
+});
+```
+
+### 4.3 SiteContentController Logic
+
+```php
+// GET /api/v1/site-content  (Public, locale from Accept-Language header)
+// Returns: { "hero.title": "Welcome to TaxProConsult", "about.body": "..." }
+public function index(Request $request) {
+    $locale = $request->header('Accept-Language', 'en');
+    $language = Language::where('code', $locale)->first();
+
+    $contents = SiteContent::with(['translations' => fn($q) =>
+        $q->where('languageId', $language?->id)
+    ])->where('is_active', true)->get();
+
+    // Return as a flat key→value map for easy frontend use
+    return response()->json(
+        $contents->mapWithKeys(fn($c) => [
+            $c->key => $c->translations->first()?->value
+        ])
+    );
+}
+
+// PUT /api/v1/site-content/{id}/translations  (Admin)
+// Body: { languageId: 1, value: "New title text" }
+public function upsertTranslation(Request $request, $id) {
+    $content = SiteContent::findOrFail($id);
+    SiteContentTranslation::updateOrCreate(
+        ['siteContentId' => $id, 'languageId' => $request->languageId],
+        ['value' => $request->value]
+    );
+    return response()->json(['success' => true]);
+}
+```
+
+---
+
+## 5. Frontend — React Implementation
+
+### 5.1 New Files to Create in `src/`
+
+```
+src/
+  contexts/
+    SiteContentContext.jsx      ← Global CMS content provider (NEW)
+  hooks/
+    useSiteContent.js           ← Simple hook (NEW)
+  lib/
+    api.js                      ← Add siteContentApi (EXTEND EXISTING)
+  pages/
+    admin/
+      SiteContentTab.jsx        ← New admin tab (NEW)
+  components/
+    admin/
+      ContentEditor.jsx         ← Rich inline editor for text/html/image/json (NEW)
+      ContentSection.jsx        ← Groups keys by section (NEW)
+```
+
+### 5.2 `SiteContentContext.jsx` — Global CMS Provider
+
+```jsx
+// Fetches ALL content once, provides it everywhere via context
+// Frontend usage: const { c } = useSiteContent();
+// Then: <h1>{c("hero.title")}</h1>
+
+const SiteContentContext = createContext({});
+
+export const SiteContentProvider = ({ children }) => {
+  const { locale } = useLanguage();
+
+  const { data: content = {} } = useQuery({
+    queryKey: ["site-content", locale],
+    queryFn: () => siteContentApi.list(locale),
+    staleTime: 5 * 60 * 1000,  // Cache 5 min — fast page loads
+  });
+
+  // c("hero.title") → returns live DB value or fallback
+  const c = (key, fallback = "") => content[key] ?? fallback;
+
+  return (
+    <SiteContentContext.Provider value={{ c, content }}>
+      {children}
+    </SiteContentContext.Provider>
+  );
+};
+```
+
+### 5.3 Updating `Index.jsx` / `Services.jsx` / etc.
+
+Replace hardcoded strings with `c("key")` calls:
+
+```jsx
+// BEFORE (hardcoded):
+<h1 className="hero-title">Welcome to TaxProConsult</h1>
+<p>Your trusted tax advisory firm</p>
+
+// AFTER (CMS-driven):
+const { c } = useSiteContent();
+<h1 className="hero-title">{c("hero.title", "Welcome to TaxProConsult")}</h1>
+<p>{c("hero.subtitle", "Your trusted tax advisory firm")}</p>
+```
+
+> **Note:** The fallback argument ensures the page never appears blank if the admin hasn't set a value yet.
+
+### 5.4 Admin `SiteContentTab.jsx` — The Editor Interface
+
+The admin sees content grouped by section (Hero, About, FAQ, etc.). For each key, they can:
+
+1. **Select a language tab** (EN | SW | ZH — from your live Languages list)
+2. **Edit the value** in the appropriate editor:
+   - `text` → Simple `<Input>` field
+   - `html` → A rich text area (or simple textarea with HTML preview)
+   - `image` → File upload with current image preview
+   - `json` → Structured editor (e.g., for FAQ items: add/remove Q&A pairs)
+3. **Click Save** → Calls `PUT /site-content/{id}/translations`
+4. **See live preview** → Changes reflect instantly on the public site (after React Query cache invalidation)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  SITE CONTENT                                    + Add Section  │
+│  Dashboard / Site Content / List                                │
+├─────────────────────────────────────────────────────────────────┤
+│  [EN]  [SW]  [ZH]   ← Language Tabs                           │
+├─────────────────────────────────────────────────────────────────┤
+│  ▼ Hero Section                                                 │
+│  ┌─────────────────────────────────────────────────┐           │
+│  │ hero.badge    [text]  [Your Trusted Partner  ✏] │           │
+│  │ hero.title    [text]  [Welcome to TaxProC... ✏] │           │
+│  │ hero.subtitle [html]  [Your trusted tax adv ✏] │           │
+│  │ hero.image    [img]   [🖼 hero-image.jpg   📤] │           │
+│  └─────────────────────────────────────────────────┘           │
+│  ▼ About Section                                                │
+│  ┌─────────────────────────────────────────────────┐           │
+│  │ about.title   [text]  [About Us             ✏] │           │
+│  │ about.body    [html]  [We are a leading...  ✏] │           │
+│  └─────────────────────────────────────────────────┘           │
+│  ▼ FAQ Section                                                  │
+│  ┌─────────────────────────────────────────────────┐           │
+│  │ faq.items     [json]  [Q: What is... + Add FAQ] │           │
+│  └─────────────────────────────────────────────────┘           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 6. Step-by-Step Implementation Order
+
+### Phase 1 — Backend (1-2 days)
+| # | Task | File |
+|---|---|---|
+| 1 | Create migration for `site_contents` | `database/migrations/` |
+| 2 | Create migration for `site_content_translations` | `database/migrations/` |
+| 3 | Create `SiteContent` model | `app/Models/SiteContent.php` |
+| 4 | Create `SiteContentTranslation` model | `app/Models/SiteContentTranslation.php` |
+| 5 | Create `SiteContentController` | `app/Http/Controllers/Api/v1/` |
+| 6 | Register routes in `api.php` | `routes/api.php` |
+| 7 | Create and run seeder with all default keys | `database/seeders/` |
+| 8 | Run `php artisan migrate --seed` | Terminal |
+
+### Phase 2 — Frontend API & Context (0.5 day)
+| # | Task | File |
+|---|---|---|
+| 9 | Add `siteContentApi` to `api.js` | `src/lib/api.js` |
+| 10 | Create `SiteContentContext.jsx` | `src/contexts/` |
+| 11 | Create `useSiteContent.js` hook | `src/hooks/` |
+| 12 | Wrap `App.jsx` with `SiteContentProvider` | `src/App.jsx` |
+
+### Phase 3 — Admin Editor Tab (1-2 days)
+| # | Task | File |
+|---|---|---|
+| 13 | Create `ContentEditor.jsx` component | `src/components/admin/` |
+| 14 | Create `SiteContentTab.jsx` main page | `src/pages/admin/` |
+| 15 | Add "Site Content" tab to `Admin.jsx` sidebar | `src/pages/Admin.jsx` |
+
+### Phase 4 — Connect Public Pages (1 day)
+| # | Task | File |
+|---|---|---|
+| 16 | Replace hardcoded strings in `Index.jsx` | `src/pages/Index.jsx` |
+| 17 | Replace hardcoded strings in `Services.jsx` | `src/pages/Services.jsx` |
+| 18 | Replace hardcoded strings in `Posters.jsx` | `src/pages/Posters.jsx` |
+| 19 | Test all 3 languages switch correctly | Browser |
+
+---
+
+## 7. Key Design Decisions
+
+### Decision 1: Flat Key-Value vs. Structured Tables
+We use **flat key-value** (`key = "hero.title"`) because:
+- It's infinitely flexible — add new content areas without migrations
+- Matches exactly how Amazon and other major platforms work internally
+- The frontend just calls `c("hero.title")` — dead simple
+
+### Decision 2: Public Endpoint (No Auth)
+`GET /site-content` is **public and unauthenticated**, so:
+- The public website loads instantly without login overhead
+- It's safe because it's read-only
+- Matches how any public CDN/CMS works
+
+### Decision 3: Cache Strategy
+- **Frontend caches** content for 5 minutes (React Query `staleTime`)
+- After admin saves, React Query invalidates and **refetches immediately**
+- The admin sees changes instantly; public users see changes within 5 minutes
+
+### Decision 4: Image Handling
+- Images go through the **existing poster/file upload pattern** your backend already handles
+- The `image` type stores a **URL string** as the value (e.g., `https://taxproconsult.co.tz/storage/hero.jpg`)
+- Upload via `POST /site-content/image` → returns URL → save URL as value
+
+---
+
+## 8. What Changes for Each Language
+
+When an admin edits content, they:
+
+1. Click the **[SW]** language tab in the editor
+2. The form loads the **Swahili translation** for each key
+3. Edit the Swahili value
+4. Click Save → calls `PUT /site-content/{id}/translations` with `{ languageId: 2, value: "..." }`
+
+The public site already uses `Accept-Language` headers (as seen in `api.js`) — the backend returns the right language automatically. **No frontend changes needed for language switching** — it already works.
+
+---
+
+## 9. Dependencies Needed
+
+### Frontend (already have most):
+```bash
+# Optional: Rich text editor for html-type fields
+npm install @tiptap/react @tiptap/starter-kit
+# OR simpler alternative:
+npm install react-quill
+```
+
+### Backend (no new packages needed):
+- Laravel already handles file uploads, eloquent ORM, and sanctum auth ✅
+
+---
+
+## 10. Estimated Timeline
+
+| Phase | Duration |
+|---|---|
+| Backend DB + API | 1–2 days |
+| Frontend Context + API client | 3–4 hours |
+| Admin Editor Tab UI | 1–2 days |
+| Connecting public pages | 4–6 hours |
+| Testing across 3 languages | 2–4 hours |
+| **Total** | **3–5 days** |
+
+---
+
+> **Ready to start?** Say the word and we begin with **Phase 1 — Backend migrations and controller**, then move through each phase systematically. The backend is the foundation everything depends on.
