@@ -7,7 +7,7 @@ import { authApi, clearToken } from "@/lib/api";
 import { ResponseDialog } from "@/components/ui/response-dialog";
 import { Button } from "@/components/ui/button";
 
-export const UserDropdown = ({ user, initials, variant = "sidebar" }) => {
+export const UserDropdown = ({ user, initials, variant = "sidebar", onNavigate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const dropdownRef = useRef(null);
@@ -60,7 +60,7 @@ export const UserDropdown = ({ user, initials, variant = "sidebar" }) => {
 
         {isOpen && (
           <div className="absolute bottom-4 left-[calc(100%+12px)] z-50 w-64 rounded-2xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in slide-in-from-left-2 duration-200">
-            <DropdownContent user={user} onLogout={requestLogout} close={() => setIsOpen(false)} />
+            <DropdownContent user={user} onLogout={requestLogout} close={() => setIsOpen(false)} onNavigate={onNavigate} />
           </div>
         )}
 
@@ -83,7 +83,7 @@ export const UserDropdown = ({ user, initials, variant = "sidebar" }) => {
 
         {isOpen && (
           <div className="absolute bottom-4 left-[calc(100%+12px)] z-50 w-64 rounded-2xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in slide-in-from-left-2 duration-200">
-            <DropdownContent user={user} onLogout={requestLogout} close={() => setIsOpen(false)} />
+            <DropdownContent user={user} onLogout={requestLogout} close={() => setIsOpen(false)} onNavigate={onNavigate} />
           </div>
         )}
 
@@ -111,7 +111,7 @@ export const UserDropdown = ({ user, initials, variant = "sidebar" }) => {
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 z-50 w-64 rounded-2xl border border-border bg-card p-2 shadow-2xl animate-in fade-in zoom-in slide-in-from-top-2 duration-200">
-          <DropdownContent user={user} onLogout={requestLogout} close={() => setIsOpen(false)} />
+          <DropdownContent user={user} onLogout={requestLogout} close={() => setIsOpen(false)} onNavigate={onNavigate} />
         </div>
       )}
 
@@ -147,14 +147,14 @@ const LogoutDialog = ({ open, onClose, onConfirm }) => (
 );
 
 // ─── Dropdown Menu Content ────────────────────────────────────────────────────
-const DropdownContent = ({ user, onLogout, close }) => (
+const DropdownContent = ({ user, onLogout, close, onNavigate }) => (
   <>
-    <div className="px-3 py-2 mb-1 border-b border-border/50">
+    {/* <div className="px-3 py-2 mb-1 border-b border-border/50">
       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account Settings</p>
-    </div>
+    </div> */}
 
     <button
-      onClick={() => { close(); toast.info("Profile feature coming soon!"); }}
+      onClick={() => { close(); onNavigate?.("account"); }}
       className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors text-left group"
     >
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">

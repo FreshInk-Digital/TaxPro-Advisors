@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Building2, LayoutDashboard, FileEdit, MessageSquare,
-  Globe, Users, Image, LogOut, Menu, X, User, Settings, ChevronRight
+  Globe, Users, Image, LogOut, Menu, X, User, Settings, ChevronRight, FileText, FolderOpen
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,15 +20,19 @@ const RequestsTab = lazy(() => import("./admin/RequestsTab").then(m => ({ defaul
 const LanguagesTab = lazy(() => import("./admin/LanguagesTab").then(m => ({ default: m.LanguagesTab })));
 const UsersTab = lazy(() => import("./admin/UsersTab").then(m => ({ default: m.UsersTab })));
 const AccountTab = lazy(() => import("./admin/AccountTab").then(m => ({ default: m.AccountTab })));
+const DocumentTypesTab = lazy(() => import("./admin/DocumentTypesTab").then(m => ({ default: m.DocumentTypesTab })));
+const DocumentsTab = lazy(() => import("./admin/DocumentsTab").then(m => ({ default: m.DocumentsTab })));
 
 const sidebarItems = [
   { icon: LayoutDashboard, labelKey: "dashboard", id: "dashboard" },
+  { icon: Users, labelKey: "usersManagement", id: "users" },
+  { icon: MessageSquare, labelKey: "serviceRequests", id: "requests" },
+  
   { icon: FileEdit, labelKey: "servicesManagement", id: "services" },
   { icon: Image, labelKey: "contentPosters", id: "posters" },
-  { icon: MessageSquare, labelKey: "serviceRequests", id: "requests" },
+  { icon: FileText, labelKey: "documentTypes", id: "documentTypes" },
+  { icon: FolderOpen, labelKey: "documents", id: "documents" },
   { icon: Globe, labelKey: "languages", id: "languages" },
-  { icon: Users, labelKey: "usersManagement", id: "users" },
-  { icon: User, labelKey: "account", id: "account" },
 ];
 
 const Admin = () => {
@@ -68,13 +72,15 @@ const Admin = () => {
   const renderTab = () => {
     try {
       switch (activeTab) {
-        case "dashboard":  return <DashboardTab />;
-        case "services":   return <ServicesTab />;
-        case "posters":    return <PostersTab />;
-        case "requests":   return <RequestsTab />;
-        case "languages":  return <LanguagesTab />;
-        case "users":      return <UsersTab />;
-        case "account":    return <AccountTab />;
+        case "dashboard":     return <DashboardTab />;
+        case "users":         return <UsersTab />;
+        case "documentTypes": return <DocumentTypesTab />;
+        case "documents":     return <DocumentsTab />;
+        case "services":      return <ServicesTab />;
+        case "posters":       return <PostersTab />;
+        case "requests":      return <RequestsTab />;
+        case "languages":     return <LanguagesTab />;
+        case "account":       return <AccountTab />;
         default:           return <DashboardTab />;
       }
     } catch (err) {
@@ -144,6 +150,7 @@ const Admin = () => {
             user={storedUser} 
             initials={userInitials} 
             variant={sidebarOpen ? "sidebar" : "collapsed"}
+            onNavigate={(tab) => { setActiveTab(tab); if (window.innerWidth < 768) setSidebarOpen(false); }}
           />
         </div>
       </aside>
@@ -161,7 +168,8 @@ const Admin = () => {
 
           <main className="flex-1 overflow-x-hidden bg-muted/30 p-4 md:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl">
-              <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div></div>}>
+              <Suspense fallback={<div className="flex h-64 items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div></div>}>
                 {renderTab()}
               </Suspense>
             </div>

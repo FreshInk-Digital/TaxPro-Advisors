@@ -18,7 +18,7 @@ import { SkeletonTable } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const makeDefaultValues = (langs = []) => ({
-  status: "ACTIVE",
+  status: "active",
   translations: langs.length
     ? langs.map((l) => ({ languageId: l.id, title: "", description: "", offers: [""] }))
     : [{ languageId: "", title: "", description: "", offers: [""] }],
@@ -83,7 +83,7 @@ export const ServicesTab = () => {
   const onEdit = (service) => {
     setEditing(service);
     reset({
-      status: service.status || "ACTIVE",
+      status: service.status || "active",
       translations: service.translations?.length ? service.translations.map((tr) => ({
         languageId: tr.language?.id || tr.languageId || "",
         title: tr.title || "",
@@ -124,11 +124,13 @@ export const ServicesTab = () => {
           {/* Status */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">{t("status")}</label>
-            <Select defaultValue="ACTIVE" onValueChange={(v) => setValue("status", v)}>
-              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <Select defaultValue="active" onValueChange={(v) => setValue("status", v)}>
+              <SelectTrigger className="mt-1 rounded-xl">
+                <SelectValue placeholder={t("selectStatus")} />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ACTIVE">{t("active")}</SelectItem>
-                <SelectItem value="INACTIVE">{t("inactive")}</SelectItem>
+                <SelectItem value="active">{t("active")}</SelectItem>
+                <SelectItem value="notActive">{t("inactive")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -241,7 +243,7 @@ export const ServicesTab = () => {
                   <tr key={s.id} className="border-b border-border last:border-0">
                     <td className="px-4 py-3 font-medium text-foreground">{tr?.title || `Service #${s.id}`}</td>
                     <td className="px-4 py-3">
-                      <Badge variant={s.status === "ACTIVE" ? "default" : "secondary"}>{s.status}</Badge>
+                      <Badge variant={s.status === "active" ? "default" : "secondary"}>{s.status === "notActive" ? "INACTIVE" : s.status}</Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{s.translations?.length || 0} lang(s)</td>
                     <td className="px-4 py-3 text-right flex items-center justify-end gap-2">

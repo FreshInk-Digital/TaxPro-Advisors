@@ -135,6 +135,9 @@ export const languagesApi = {
     apiFetch(`/languages/${id}`, { method: "PUT", body: payload }),
 
   delete: (id) => apiFetch(`/languages/${id}`, { method: "DELETE" }),
+
+  bulkDelete: (ids) =>
+    apiFetch("/languages-batch/delete", { method: "DELETE", body: { ids } }),
 };
 
 // --------------------------------------------------------------------------
@@ -170,6 +173,9 @@ export const documentTypesApi = {
     apiFetch(`/document-types/${id}`, { method: "PUT", body: payload }),
 
   delete: (id) => apiFetch(`/document-types/${id}`, { method: "DELETE" }),
+
+  bulkDelete: (ids) =>
+    apiFetch("/document-types-batch/delete", { method: "DELETE", body: { ids } }),
 };
 
 // --------------------------------------------------------------------------
@@ -237,7 +243,7 @@ export const usersApi = {
   delete: (id) => apiFetch(`/users/${id}`, { method: "DELETE" }),
 
   bulkDelete: (ids) =>
-    apiFetch("/users/bulk-delete", { method: "DELETE", body: { ids } }),
+    apiFetch("/users-batch/delete", { method: "DELETE", body: { ids } }),
 
   changePassword: (id, oldPassword, newPassword) =>
     apiFetch(`/users/${id}/change-password`, {

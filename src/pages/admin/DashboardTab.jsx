@@ -60,7 +60,7 @@ export const DashboardTab = () => {
     {
       label: t("publishedPages"),
       value: Array.isArray(services)
-        ? services.filter((s) => s && s.status === "ACTIVE").length
+        ? services.filter((s) => s && s.status === "active").length
         : undefined,
       loading: loadingSvcs,
       icon: TrendingUp,

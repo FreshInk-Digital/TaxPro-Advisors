@@ -124,9 +124,19 @@ export const UsersTab = () => {
     else createMutation.mutate(values);
   };
 
+  // Only users that are NOT the currently logged-in user are selectable
+  const selectableUsers = paginatedUsers.filter(u => u.id !== currentUserId);
+
   const toggleSelectAll = () => {
-    if (selectedIds.length === filteredUsers.length) setSelectedIds([]);
-    else setSelectedIds(filteredUsers.map(u => u.id));
+    const selectableIds = selectableUsers.map(u => u.id);
+    const allSelected = selectableIds.every(id => selectedIds.includes(id));
+    if (allSelected) {
+      // Deselect all selectable users on the current page
+      setSelectedIds(prev => prev.filter(id => !selectableIds.includes(id)));
+    } else {
+      // Select all selectable users on the current page (merge with existing)
+      setSelectedIds(prev => [...new Set([...prev, ...selectableIds])]);
+    }
   };
 
   const toggleSelect = (id) => {
@@ -208,14 +218,18 @@ export const UsersTab = () => {
                       <input
                         type="checkbox"
                         className="rounded border-muted-foreground/30 accent-primary"
-                        checked={selectedIds.length === paginatedUsers.length && paginatedUsers.length > 0}
+                        disabled={selectableUsers.length === 0}
+                        checked={
+                          selectableUsers.length > 0 &&
+                          selectableUsers.every(u => selectedIds.includes(u.id))
+                        }
                         onChange={toggleSelectAll}
                       />
                     </th>
                     <th className="w-12 px-2 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">#</th>
                     <th className="px-4 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">{t("name")}</th>
                     <th className="px-4 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">{t("emailAddress")}</th>
-                    <th className="px-4 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">{t("role")}</th>
+                    <th className="px-4 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">{t("role").toUpperCase()}</th>
                     <th className="px-4 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Created At</th>
                     <th className="w-20 px-4 py-4 text-right font-bold text-muted-foreground uppercase tracking-wider text-[10px]">{t("actions")}</th>
                   </tr>
@@ -257,7 +271,7 @@ export const UsersTab = () => {
                           variant={u.role?.toLowerCase() === "admin" ? "default" : "secondary"}
                           className="rounded-lg px-2 py-0.5 text-[10px] font-bold tracking-wide"
                         >
-                          {u.role}
+                          {u.role?.toUpperCase()}
                         </Badge>
                       </td>
                       <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
@@ -353,7 +367,7 @@ export const UsersTab = () => {
                 { label: t("lastName"), field: "lastName", placeholder: "Doe" },
               ].map(({ label, field, placeholder }) => (
                 <div key={field}>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}<span className="text-destructive ml-0.5">*</span></label>
                   <Input placeholder={placeholder} {...register(field)} className={errors[field] ? "border-destructive" : "rounded-xl"} />
                   {errors[field] && <p className="mt-1 text-xs text-destructive">{errors[field].message}</p>}
                 </div>
@@ -361,13 +375,13 @@ export const UsersTab = () => {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("emailAddress")}</label>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("emailAddress")}<span className="text-destructive ml-0.5">*</span></label>
               <Input type="email" placeholder="john@example.com" {...register("email")} className={errors.email ? "border-destructive" : "rounded-xl"} />
               {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("phone")}</label>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("phone")}<span className="text-destructive ml-0.5">*</span></label>
               <Controller
                 name="phoneNumber"
                 control={control}
@@ -379,7 +393,7 @@ export const UsersTab = () => {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("role")}</label>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("role")}<span className="text-destructive ml-0.5">*</span></label>
               <Controller
                 name="role"
                 control={control}

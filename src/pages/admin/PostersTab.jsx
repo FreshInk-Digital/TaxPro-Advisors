@@ -18,7 +18,7 @@ import { SkeletonPosters } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const makeDefault = (langs = []) => ({
-  status: "ACTIVE",
+  status: "active",
   custom_file_name: "",
   translations: langs.length
     ? langs.map((l) => ({ languageId: l.id, title: "", description: "" }))
@@ -100,7 +100,7 @@ export const PostersTab = () => {
   const onEdit = (poster) => {
     setEditing(poster);
     reset({
-      status: poster.status || "ACTIVE",
+      status: poster.status || "active",
       custom_file_name: poster.custom_file_name || "",
       translations: poster.translations?.length
         ? poster.translations.map((tr) => ({ languageId: tr.language?.id || tr.languageId || "", title: tr.title || "", description: tr.description || "" }))
@@ -171,11 +171,13 @@ export const PostersTab = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-foreground">{t("status")}</label>
-              <Select defaultValue="ACTIVE" onValueChange={(v) => setValue("status", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select defaultValue="active" onValueChange={(v) => setValue("status", v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("selectStatus")} />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ACTIVE">{t("active")}</SelectItem>
-                  <SelectItem value="INACTIVE">{t("inactive")}</SelectItem>
+                  <SelectItem value="active">{t("active")}</SelectItem>
+                  <SelectItem value="notActive">{t("inactive")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -262,8 +264,8 @@ export const PostersTab = () => {
                   ) : (
                     <Image className="h-8 w-8 text-muted-foreground" />
                   )}
-                  <Badge className="absolute top-2 right-2" variant={poster.status === "ACTIVE" ? "default" : "secondary"}>
-                    {poster.status}
+                  <Badge className="absolute top-2 right-2" variant={poster.status === "active" ? "default" : "secondary"}>
+                    {poster.status === "notActive" ? "INACTIVE" : poster.status}
                   </Badge>
                 </div>
                 <div className="p-4">

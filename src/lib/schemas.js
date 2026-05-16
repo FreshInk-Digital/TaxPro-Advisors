@@ -101,9 +101,7 @@ export const languageSchema = z.object({
   nativeName: z
     .string({ required_error: "Native name is required" })
     .min(2, "Native name must be at least 2 characters"),
-  flag: z
-    .string({ required_error: "Flag code is required" })
-    .min(2, "Flag country code is required (e.g. gb, tz)"),
+  flag: z.string().optional().or(z.literal("")),
 });
 
 // --------------------------------------------------------------------------
@@ -130,7 +128,7 @@ const serviceTranslationSchema = translationBaseSchema.extend({
 });
 
 export const serviceSchema = z.object({
-  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+  status: z.enum(["active", "notActive"]).default("active"),
   translations: z
     .array(serviceTranslationSchema)
     .min(1, "At least one translation is required"),
@@ -146,7 +144,7 @@ const docTypeTranslationSchema = translationBaseSchema.extend({
 });
 
 export const documentTypeSchema = z.object({
-  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+  status: z.enum(["active", "notActive"]).default("active"),
   translations: z
     .array(docTypeTranslationSchema)
     .min(1, "At least one translation is required"),
@@ -169,7 +167,7 @@ export const documentSchema = z.object({
     .union([z.string(), z.number()])
     .transform((v) => Number(v))
     .refine((v) => !isNaN(v) && v > 0, "Document type is required"),
-  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+  status: z.enum(["active", "notActive"]).default("active"),
   custom_file_name: z.string().optional(),
   translations: z
     .array(documentTranslationSchema)
@@ -189,7 +187,7 @@ const posterTranslationSchema = translationBaseSchema.extend({
 });
 
 export const posterSchema = z.object({
-  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+  status: z.enum(["active", "notActive"]).default("active"),
   custom_file_name: z.string().optional(),
   translations: z
     .array(posterTranslationSchema)
