@@ -333,6 +333,17 @@ export const postersApi = {
 
   bulkDelete: (ids) =>
     apiFetch("/posters-batch/delete", { method: "DELETE", body: { ids }, requireAuth: true }),
+
+  getImageUrl: (id) => {
+    const origin = (() => {
+      try {
+        return new URL(BASE_URL, window.location.origin).origin;
+      } catch {
+        return window.location.origin;
+      }
+    })();
+    return `${origin}${BASE_URL}/posters/${id}/image`;
+  },
 };
 
 // --------------------------------------------------------------------------

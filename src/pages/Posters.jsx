@@ -6,7 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import { postersApi, resolveAssetUrl } from "@/lib/api";
 import { SkeletonPosters } from "@/components/ui/skeleton";
 
-const getPosterFileUrl = (poster) => resolveAssetUrl(poster?.file_url || poster?.image_url || poster?.posterImage || poster?.image_path);
+const getPosterFileUrl = (poster) => {
+  if (poster?.id) {
+    return postersApi.getImageUrl(poster.id);
+  }
+  return resolveAssetUrl(poster?.file_url || poster?.image_url || poster?.posterImage || poster?.image_path);
+};
 
 const Posters = () => {
   const { t, lang } = useLanguage();
