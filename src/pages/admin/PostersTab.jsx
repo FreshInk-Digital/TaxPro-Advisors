@@ -20,11 +20,11 @@ import { ContentHeader } from "@/components/admin/ContentHeader";
 import { useResponseDialog } from "@/components/ui/response-dialog";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { languagesApi, postersApi, resolveAssetUrl } from "@/lib/api";
+import { getPosterPreviewUrl, languagesApi, postersApi } from "@/lib/api";
 import { posterSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 
-const getPosterImageUrl = (poster) => resolveAssetUrl(poster?.image_url || poster?.file_url || poster?.posterImage || poster?.image_path);
+const getPosterImageUrl = (poster) => getPosterPreviewUrl(poster);
 
 export const PostersTab = () => {
   const { t, lang } = useLanguage();

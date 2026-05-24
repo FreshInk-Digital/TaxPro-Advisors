@@ -39,6 +39,8 @@ export const LanguagesTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [dialog, showDialog] = useResponseDialog();
+  // After adding a new language, prompt admin to fill translations
+  const [pendingLocale, setPendingLocale] = useState(null);
 
   // ── Data ────────────────────────────────────────────────────────────────────
   const { data, isLoading } = useQuery({
@@ -75,11 +77,16 @@ export const LanguagesTab = () => {
   // ── Mutations ───────────────────────────────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: (payload) => languagesApi.create(payload),
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success("Language created successfully!");
       qc.invalidateQueries(["admin-languages"]);
       qc.invalidateQueries(["languages"]);
       closeForm();
+      // If backend says translations need to be filled, prompt the admin
+      const newLang = res?.data;
+      if (newLang?.code) {
+        setPendingLocale({ code: newLang.code, name: newLang.name, flag: newLang.flag });
+      }
     },
     onError: (e) => toast.error(e?.message || "Failed to create language"),
   });
@@ -163,6 +170,51 @@ export const LanguagesTab = () => {
             <Plus className="mr-2 h-4 w-4" /> {t("addNew")}
           </Button>
         </ContentHeader>
+
+        {/* Fill-translations prompt banner — shown after new language created */}
+        {pendingLocale && (
+          <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between animate-in slide-in-from-top-4 duration-400">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <Globe className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {pendingLocale.flag && <span className="mr-1">{pendingLocale.flag}</span>}
+                  {pendingLocale.name} added — please fill in translations
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  All content keys were auto-seeded with <strong>missing</strong> status. English defaults will show until you translate them.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-xl text-xs"
+                onClick={() => setPendingLocale(null)}
+              >
+                Later
+              </Button>
+              <Button
+                size="sm"
+                className="rounded-xl text-xs shadow-md shadow-primary/20"
+                onClick={() => {
+                  setPendingLocale(null);
+                  // Navigate to ContentTranslationsTab — dispatch custom event read by Admin.jsx
+                  window.dispatchEvent(
+                    new CustomEvent("admin-navigate-tab", {
+                      detail: { tab: "contentTranslations", locale: pendingLocale.code },
+                    })
+                  );
+                }}
+              >
+                Fill Translations Now →
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Table Card */}
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">

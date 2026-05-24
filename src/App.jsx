@@ -69,22 +69,22 @@ const AppRoutes = () => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <LanguageProvider>
-        {/* Sonner Toast — Top-Right with richColors */}
-        <Toaster
-          position="top-right"
-          richColors
-          expand={false}
-          closeButton
-          duration={4000}
-          toastOptions={{
-            style: { fontFamily: "inherit" },
-          }}
-        />
-        <BrowserRouter>
+      <BrowserRouter>
+        <LanguageProvider>
+          {/* Sonner Toast — Top-Right with richColors */}
+          <Toaster
+            position="top-right"
+            richColors
+            expand={false}
+            closeButton
+            duration={4000}
+            toastOptions={{
+              style: { fontFamily: "inherit" },
+            }}
+          />
           <AppRoutes />
-        </BrowserRouter>
-      </LanguageProvider>
+        </LanguageProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

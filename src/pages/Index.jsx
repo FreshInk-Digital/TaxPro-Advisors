@@ -35,7 +35,7 @@ import heroImage2 from "@/assets/hero-2.jpg";
 import heroImage3 from "@/assets/hero-3.jpg";
 import heroImage4 from "@/assets/hero-4.jpg";
 import { fetchHomePageData } from "@/lib/homePage";
-import { publicApi, servicesApi, postersApi, resolveAssetUrl } from "@/lib/api";
+import { getPosterPreviewUrl, publicApi, servicesApi, postersApi } from "@/lib/api";
 import { serviceRequestSchema } from "@/lib/schemas";
 import { SkeletonHero, SkeletonStats } from "@/components/ui/skeleton";
 
@@ -60,12 +60,16 @@ const defaultServiceCards = [
   },
 ];
 
-const localeMap = {
-  en: "en",
-  sw: "sw",
-  zh: "zh-CN",
-  "zh-CN": "zh-CN",
-};
+function getLocaleCandidates(locale) {
+  const candidates = [locale];
+  if (locale?.includes("-")) candidates.push(locale.split("-")[0]);
+  candidates.push("en");
+  return [...new Set(candidates.filter(Boolean))];
+}
+
+function getTranslationLanguageCode(translation) {
+  return translation?.language?.code || translation?.languageCode || translation?.language_code;
+}
 
 const Index = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -163,10 +167,12 @@ const Index = () => {
 
   const getServiceTranslation = (service) => {
     const translations = service?.translations || [];
+    const localeCandidates = getLocaleCandidates(activeLocale);
     return (
       (service?.translation?.title ? service.translation : null) ||
-      translations.find((tr) => tr?.language?.code === activeLocale) ||
-      translations.find((tr) => tr?.language?.code === "en") ||
+      localeCandidates.map((locale) =>
+        translations.find((tr) => getTranslationLanguageCode(tr) === locale)
+      ).find(Boolean) ||
       translations[0] ||
       null
     );
@@ -185,8 +191,19 @@ const Index = () => {
       })
     : defaultServiceCards;
 
-  const getPosterImageUrl = (poster) => resolveAssetUrl(poster?.image_url || poster?.file_url || poster?.posterImage || poster?.image_path);
-  const getPosterTranslation = (poster) => poster?.translations?.[0] || null;
+  const getPosterImageUrl = (poster) => getPosterPreviewUrl(poster);
+  const getPosterTranslation = (poster) => {
+    const translations = poster?.translations || [];
+    const localeCandidates = getLocaleCandidates(activeLocale);
+    return (
+      (poster?.translation?.title ? poster.translation : null) ||
+      localeCandidates.map((locale) =>
+        translations.find((tr) => getTranslationLanguageCode(tr) === locale)
+      ).find(Boolean) ||
+      translations[0] ||
+      null
+    );
+  };
   const posters = Array.isArray(apiPostersData) && apiPostersData.length
     ? apiPostersData.slice(0, 4).map((poster) => {
         const tr = getPosterTranslation(poster);
@@ -606,6 +623,7 @@ export default Index;
 // IndexContactForm — home page inline service request form
 // ---------------------------------------------------------------------------
 const IndexContactForm = ({ lang }) => {
+  const { t } = useLanguage();
   const { data: servicesData } = useQuery({
     queryKey: ["services", lang],
     queryFn: async () => {
@@ -657,13 +675,13 @@ const IndexContactForm = ({ lang }) => {
         locale: lang === "sw" ? "sw" : "en",
       });
       if (res?.success) {
-        toast.success("Request submitted! We'll contact you shortly.", { duration: 5000 });
+        toast.success(t("requestSubmittedToast"), { duration: 5000 });
         reset();
       } else {
-        toast.error(res?.message || "Submission failed. Please try again.");
+        toast.error(res?.message || t("submissionFailed"));
       }
     } catch (err) {
-      toast.error(err?.message || "Unable to submit. Please check your connection.");
+      toast.error(err?.message || t("unableToSubmit"));
     }
   };
 
@@ -676,9 +694,9 @@ const IndexContactForm = ({ lang }) => {
       {/* Full Name */}
       <div>
         <label htmlFor="idx-fullname" className="mb-1.5 block text-sm font-medium text-foreground">
-          Full Name <span className="text-destructive">*</span>
+          {t("fullName")} <span className="text-destructive">*</span>
         </label>
-        <Input id="idx-fullname" placeholder="e.g. Jane Doe" {...register("fullName")}
+        <Input id="idx-fullname" placeholder={t("fullNamePlaceholder")} {...register("fullName")}
           className={errors.fullName ? "border-destructive" : ""} />
         {errors.fullName && <p className="mt-1 text-xs text-destructive">{errors.fullName.message}</p>}
       </div>
@@ -686,9 +704,9 @@ const IndexContactForm = ({ lang }) => {
       {/* Email */}
       <div>
         <label htmlFor="idx-email" className="mb-1.5 block text-sm font-medium text-foreground">
-          Email Address <span className="text-destructive">*</span>
+          {t("emailAddress")} <span className="text-destructive">*</span>
         </label>
-        <Input id="idx-email" type="email" placeholder="jane@company.com" {...register("email")}
+        <Input id="idx-email" type="email" placeholder={t("emailPlaceholder")} {...register("email")}
           className={errors.email ? "border-destructive" : ""} />
         {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
       </div>
@@ -696,9 +714,9 @@ const IndexContactForm = ({ lang }) => {
       {/* Phone */}
       <div>
         <label htmlFor="idx-phone" className="mb-1.5 block text-sm font-medium text-foreground">
-          Phone (255...) <span className="text-destructive">*</span>
+          {t("phone")} <span className="text-destructive">*</span>
         </label>
-        <Input id="idx-phone" type="tel" placeholder="255712345678" {...register("phone")}
+        <Input id="idx-phone" type="tel" placeholder={t("phonePlaceholder")} {...register("phone")}
           className={errors.phone ? "border-destructive" : ""} />
         {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
       </div>
@@ -706,14 +724,14 @@ const IndexContactForm = ({ lang }) => {
       {/* Service */}
       <div>
         <label htmlFor="idx-service" className="mb-1.5 block text-sm font-medium text-foreground">
-          Service Requested <span className="text-destructive">*</span>
+          {t("serviceRequested")} <span className="text-destructive">*</span>
         </label>
         <Select
           value={selectedServiceId?.toString() || ""}
           onValueChange={(val) => setValue("serviceId", val, { shouldValidate: true })}
         >
           <SelectTrigger id="idx-service" className={errors.serviceId ? "border-destructive" : ""}>
-            <SelectValue placeholder="Select service" />
+            <SelectValue placeholder={t("selectServicePlaceholder")} />
           </SelectTrigger>
           <SelectContent>
             {services.map((s) => {
@@ -732,9 +750,9 @@ const IndexContactForm = ({ lang }) => {
       {/* Message */}
       <div>
         <label htmlFor="idx-message" className="mb-1.5 block text-sm font-medium text-foreground">
-          Your Message <span className="text-destructive">*</span>
+          {t("yourMessage")} <span className="text-destructive">*</span>
         </label>
-        <Textarea id="idx-message" placeholder="Tell us about your tax situation..." rows={4}
+        <Textarea id="idx-message" placeholder={t("homeMessagePlaceholder")} rows={4}
           {...register("message")} className={errors.message ? "border-destructive" : ""} />
         {errors.message && <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>}
       </div>
@@ -747,9 +765,9 @@ const IndexContactForm = ({ lang }) => {
         disabled={isSubmitting}
       >
         {isSubmitting ? (
-          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…</>
+          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("sending")}</>
         ) : (
-          <>Send Request <ArrowRight className="ml-2 h-4 w-4" /></>
+          <>{t("sendRequest")} <ArrowRight className="ml-2 h-4 w-4" /></>
         )}
       </Button>
     </form>

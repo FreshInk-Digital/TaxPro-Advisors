@@ -46,11 +46,11 @@ const ServiceRequest = () => {
   // Helper — get translation for current lang from service object
   const getServiceTranslation = (service) => {
     const translations = service?.translations || [];
+    const getCode = (translation) => translation?.language?.code || translation?.languageCode || translation?.language_code;
     return (
       (service?.translation?.title ? service.translation : null) ||
-      translations.find(
-        (tr) => tr?.language?.code === lang || tr?.language?.code === "en"
-      ) ||
+      translations.find((tr) => getCode(tr) === lang) ||
+      translations.find((tr) => getCode(tr) === "en") ||
       translations[0] ||
       null
     );
@@ -86,17 +86,17 @@ const ServiceRequest = () => {
 
       if (res?.success) {
         toast.success(
-          "Your request has been submitted! We'll contact you shortly.",
+          t("requestSubmittedToast"),
           { duration: 6000 }
         );
         setSubmitted(true);
         reset();
       } else {
-        toast.error(res?.message || "Submission failed. Please try again.");
+        toast.error(res?.message || t("submissionFailed"));
       }
     } catch (err) {
       toast.error(
-        err?.message || "Unable to submit request. Please check your connection."
+        err?.message || t("unableToSubmit")
       );
     }
   };
@@ -110,19 +110,18 @@ const ServiceRequest = () => {
               <CheckCircle2 className="h-10 w-10 text-primary" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-3">
-              Request Submitted Successfully!
+              {t("requestSubmittedTitle")}
             </h1>
             <p className="text-muted-foreground mb-8">
-              Thank you for reaching out. Our team will review your request and
-              get back to you within 24 hours.
+              {t("requestSubmittedDescription")}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button onClick={() => setSubmitted(false)} variant="outline">
-                Submit Another Request
+                {t("submitAnotherRequest")}
               </Button>
               <Button asChild>
                 <Link to="/">
-                  Back to Home
+                  {t("backToHome")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -205,7 +204,7 @@ const ServiceRequest = () => {
                   <SelectContent>
                     {services.length === 0 ? (
                       <SelectItem value="0" disabled>
-                        No services available
+                        {t("noServicesAvailable")}
                       </SelectItem>
                     ) : (
                       services.map((service, idx) => {
@@ -256,7 +255,7 @@ const ServiceRequest = () => {
                 </label>
                 <Input
                   id="req-fullname"
-                  placeholder="Jane Doe"
+                  placeholder={t("fullNamePlaceholder")}
                   {...register("fullName")}
                   className={errors.fullName ? "border-destructive" : ""}
                 />
@@ -279,7 +278,7 @@ const ServiceRequest = () => {
                   <Input
                     id="req-email"
                     type="email"
-                    placeholder="jane@example.com"
+                    placeholder={t("emailPlaceholder")}
                     autoComplete="email"
                     {...register("email")}
                     className={errors.email ? "border-destructive" : ""}
@@ -300,7 +299,7 @@ const ServiceRequest = () => {
                   <Input
                     id="req-phone"
                     type="tel"
-                    placeholder="255712345678"
+                    placeholder={t("phonePlaceholder")}
                     {...register("phone")}
                     className={errors.phone ? "border-destructive" : ""}
                   />
@@ -345,7 +344,7 @@ const ServiceRequest = () => {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting…
+                    {t("submitting")}
                   </>
                 ) : (
                   <>

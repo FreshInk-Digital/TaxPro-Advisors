@@ -7,7 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ContentHeader } from "@/components/admin/ContentHeader";
 
 export const DashboardTab = () => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const { data: requests, isLoading: loadingReqs } = useQuery({
     queryKey: ["admin-service-requests"],
@@ -46,6 +46,33 @@ export const DashboardTab = () => {
   });
 
   const isLoading = loadingReqs || loadingSvcs || loadingPosters || loadingLangs;
+
+  const getServiceId = (request) => request?.serviceId ?? request?.service_id ?? request?.service?.id ?? null;
+
+  const getTranslationLanguageCode = (translation) => translation?.language?.code;
+
+  const getServiceTitle = (service, fallbackId = null) => {
+    const translations = service?.translations || [];
+    return service?.translation?.title
+      || translations.find((tr) => getTranslationLanguageCode(tr) === lang)?.title
+      || translations.find((tr) => getTranslationLanguageCode(tr) === "en")?.title
+      || translations[0]?.title
+      || service?.title
+      || service?.name
+      || (fallbackId ? `Service #${fallbackId}` : "—");
+  };
+
+  const getRequestService = (request) => {
+    const serviceId = getServiceId(request);
+    return request?.service || services?.find((service) => Number(service.id) === Number(serviceId));
+  };
+
+  const getRequestServiceTitle = (request) =>
+    request?.serviceName
+    || request?.service_name
+    || request?.serviceTitle
+    || request?.service_title
+    || getServiceTitle(getRequestService(request), getServiceId(request));
 
   const stats = [
     {
@@ -125,7 +152,7 @@ export const DashboardTab = () => {
           <h2 className="text-lg font-bold text-foreground tracking-tight">Recent Service Requests</h2>
         </div>
         <div className="overflow-x-auto">
-          {loadingReqs ? (
+          {loadingReqs || loadingSvcs ? (
             <div className="p-8 space-y-4">
               <div className="h-4 w-full animate-pulse rounded bg-muted" />
               <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
@@ -161,11 +188,11 @@ export const DashboardTab = () => {
                         </td>
                         <td className="px-6 py-4">
                           <span className="bg-primary/5 text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/10">
-                            {req.service?.translations?.[0]?.title || req.serviceName || `Service #${req.serviceId || ""}`}
+                            {getRequestServiceTitle(req)}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">
-                          {req.createdAt ? new Date(req.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "—"}
+                          {req.createdAt || req.created_at ? new Date(req.createdAt || req.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "—"}
                         </td>
                       </tr>
                     );

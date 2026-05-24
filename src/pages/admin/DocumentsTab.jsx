@@ -16,19 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { documentsApi, documentTypesApi, languagesApi, resolveAssetUrl } from "@/lib/api";
+import { documentsApi, documentTypesApi, getDocumentDownloadUrl, getDocumentPreviewUrl, languagesApi } from "@/lib/api";
 import { documentSchema } from "@/lib/schemas";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ContentHeader } from "@/components/admin/ContentHeader";
 import { cn } from "@/lib/utils";
 import { useResponseDialog } from "@/components/ui/response-dialog";
-
-const getDocumentDownloadUrl = (doc) =>
-  resolveAssetUrl(doc?.downloadUrl || doc?.download_url || doc?.file_url || doc?.documentUrl || doc?.document_url);
-
-const getDocumentFileUrl = (doc) =>
-  resolveAssetUrl(doc?.documentUrl || doc?.document_url || doc?.file_url || doc?.downloadUrl || doc?.download_url);
 
 export const DocumentsTab = () => {
   const { t } = useLanguage();
@@ -237,26 +231,26 @@ export const DocumentsTab = () => {
 
   return (
     <>
-      <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="space-y-6 duration-500 animate-in fade-in">
         <ContentHeader
-          title={t("documents") || "Documents"}
+          title={"Documents"}
           breadcrumbs={[
             { label: "Documents", path: "/admin/documents" },
             { label: "List" },
           ]}
         >
           <Button onClick={() => { initializeForm(); setShowForm(true); }} className="shadow-lg shadow-primary/20">
-            <Plus className="mr-2 h-4 w-4" /> {t("addNew")}
+            <Plus className="w-4 h-4 mr-2" /> {t("addNew")}
           </Button>
         </ContentHeader>
 
         {/* Table Card */}
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="overflow-hidden border shadow-sm rounded-2xl border-border bg-card">
           {/* Toolbar */}
-          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between border-b border-border bg-muted/20">
-            <div className="flex flex-1 items-center gap-3">
+          <div className="flex flex-col gap-4 p-4 border-b sm:flex-row sm:items-center sm:justify-between border-border bg-muted/20">
+            <div className="flex items-center flex-1 gap-3">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search documents..."
                   className="pl-10 rounded-xl bg-background border-border"
@@ -268,7 +262,7 @@ export const DocumentsTab = () => {
                 <Button
                   variant="destructive"
                   size="sm"
-                  className="rounded-xl animate-in slide-in-from-left-2 duration-300"
+                  className="duration-300 rounded-xl animate-in slide-in-from-left-2"
                   onClick={async () => {
                     const ok = await showDialog({
                       variant: "confirm",
@@ -280,7 +274,7 @@ export const DocumentsTab = () => {
                     if (ok) bulkDeleteMutation.mutate(selectedIds);
                   }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="w-4 h-4 mr-2" />
                   Delete ({selectedIds.length})
                 </Button>
               )}
@@ -289,7 +283,7 @@ export const DocumentsTab = () => {
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>Show</span>
                 <Select value={String(rowsPerPage)} onValueChange={(v) => { setRowsPerPage(Number(v)); setCurrentPage(1); }}>
-                  <SelectTrigger className="h-9 w-20 rounded-lg"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-20 rounded-lg h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="10">10</SelectItem>
                     <SelectItem value="25">25</SelectItem>
@@ -325,7 +319,7 @@ export const DocumentsTab = () => {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {paginatedData.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground italic">{t("noData")}</td></tr>
+                    <tr><td colSpan={6} className="px-4 py-12 italic text-center text-muted-foreground">{t("noData")}</td></tr>
                   ) : paginatedData.map((doc, index) => {
                     const titleToShow = doc.translations?.find(t => t.language?.code === "en")?.title 
                       || doc.translations?.[0]?.title 
@@ -344,22 +338,22 @@ export const DocumentsTab = () => {
                             onChange={() => toggleSelect(doc.id)}
                           />
                         </td>
-                        <td className="px-2 py-4 text-muted-foreground font-medium">{(currentPage - 1) * rowsPerPage + index + 1}</td>
+                        <td className="px-2 py-4 font-medium text-muted-foreground">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary border border-primary/10">
-                              <FolderOpen className="h-4 w-4" />
+                            <div className="flex items-center justify-center text-xs font-bold border rounded-full h-9 w-9 bg-primary/10 text-primary border-primary/10">
+                              <FolderOpen className="w-4 h-4" />
                             </div>
                             <div className="flex flex-col">
                               <span className="font-semibold text-foreground">{titleToShow}</span>
-                              {getDocumentFileUrl(doc) ? (
+                              {getDocumentPreviewUrl(doc) ? (
                                 <a 
                                   href={getDocumentDownloadUrl(doc)} 
                                   target="_blank" 
                                   rel="noopener noreferrer" 
                                   className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-0.5 cursor-pointer font-bold"
                                 >
-                                  <Download className="h-3 w-3" /> Download File
+                                  <Download className="w-3 h-3" /> Download File
                                 </a>
                               ) : (
                                 <span className="text-[10px] text-muted-foreground italic mt-0.5">No file available</span>
@@ -377,7 +371,7 @@ export const DocumentsTab = () => {
                             {doc.status === "notActive" ? "INACTIVE" : doc.status}
                           </Badge>
                         </td>
-                        <td className="px-4 py-4 text-muted-foreground whitespace-nowrap text-xs">
+                        <td className="px-4 py-4 text-xs text-muted-foreground whitespace-nowrap">
                           {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                         </td>
                         <td className="px-4 py-4 text-right">
@@ -385,7 +379,7 @@ export const DocumentsTab = () => {
                             ref={(el) => (actionBtnRefs.current[doc.id] = el)}
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 rounded-full hover:bg-muted"
+                            className="w-8 h-8 p-0 rounded-full hover:bg-muted"
                             onClick={(e) => {
                               const rect = e.currentTarget.getBoundingClientRect();
                               setMenuPosition({
@@ -395,7 +389,7 @@ export const DocumentsTab = () => {
                               setShowActionMenu(showActionMenu === doc.id ? null : doc.id);
                             }}
                           >
-                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
                           </Button>
                         </td>
                       </tr>
@@ -407,16 +401,16 @@ export const DocumentsTab = () => {
           )}
 
           {/* Pagination */}
-          <div className="flex flex-col gap-4 border-t border-border bg-muted/10 px-4 py-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 px-4 py-4 text-sm border-t border-border bg-muted/10 text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <p>
               Showing <span className="font-semibold text-foreground">{showingStart}</span> to <span className="font-semibold text-foreground">{showingEnd}</span> of <span className="font-semibold text-foreground">{filteredDocuments.length}</span> documents
             </p>
             <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-                <ChevronsLeft className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                <ChevronsLeft className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
-                <ChevronLeft className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
+                <ChevronLeft className="w-4 h-4" />
               </Button>
               <div className="flex items-center gap-1 mx-2">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -438,11 +432,11 @@ export const DocumentsTab = () => {
                   );
                 })}
               </div>
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages || totalPages === 0}>
-                <ChevronRight className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages || totalPages === 0}>
+                <ChevronRight className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0}>
-                <ChevronsRight className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0}>
+                <ChevronsRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -457,10 +451,10 @@ export const DocumentsTab = () => {
             className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in zoom-in duration-200 space-y-4 max-h-[90vh] overflow-y-auto"
             noValidate
           >
-            <div className="flex items-center justify-between border-b border-border pb-4 sticky top-0 bg-card z-10">
+            <div className="sticky top-0 z-10 flex items-center justify-between pb-4 border-b border-border bg-card">
               <h3 className="text-lg font-bold text-foreground">{editing ? t("edit") : t("addNew")} Document</h3>
-              <button type="button" onClick={closeForm} className="rounded-full p-1 hover:bg-muted transition-colors">
-                <X className="h-5 w-5 text-muted-foreground" />
+              <button type="button" onClick={closeForm} className="p-1 transition-colors rounded-full hover:bg-muted">
+                <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
 
@@ -494,7 +488,7 @@ export const DocumentsTab = () => {
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="rounded-xl w-full">
+                      <SelectTrigger className="w-full rounded-xl">
                         <SelectValue placeholder="Select Status" />
                       </SelectTrigger>
                       <SelectContent className="z-[10001]">
@@ -516,7 +510,7 @@ export const DocumentsTab = () => {
               <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Document File {editing ? "(Optional - Upload to replace)" : <span className="text-destructive ml-0.5">*</span>}
               </label>
-              <div className="border-2 border-dashed border-border rounded-xl p-4 text-center hover:bg-muted/10 transition-colors">
+              <div className="p-4 text-center transition-colors border-2 border-dashed border-border rounded-xl hover:bg-muted/10">
                 <Input 
                   type="file" 
                   className="hidden" 
@@ -524,19 +518,19 @@ export const DocumentsTab = () => {
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
                   onChange={(e) => setSelectedFile(e.target.files?.[0])}
                 />
-                <label htmlFor="documentFile" className="cursor-pointer flex flex-col items-center justify-center gap-2">
-                  <UploadCloud className="h-6 w-6 text-muted-foreground" />
+                <label htmlFor="documentFile" className="flex flex-col items-center justify-center gap-2 cursor-pointer">
+                  <UploadCloud className="w-6 h-6 text-muted-foreground" />
                   <span className="text-sm font-medium text-primary">Click to select a file</span>
                   <span className="text-xs text-muted-foreground">PDF, DOC, XLS, Images (Max: 20MB)</span>
                   {selectedFile && <Badge variant="secondary" className="mt-2">{selectedFile.name}</Badge>}
-                  {editing && !selectedFile && <span className="text-xs italic text-muted-foreground mt-1">Current file will be kept.</span>}
+                  {editing && !selectedFile && <span className="mt-1 text-xs italic text-muted-foreground">Current file will be kept.</span>}
                 </label>
               </div>
             </div>
 
-            <div className="space-y-4 pt-4 border-t border-border">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Globe className="h-4 w-4 text-primary" /> Translations
+            <div className="pt-4 space-y-4 border-t border-border">
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Globe className="w-4 h-4 text-primary" /> Translations
               </h4>
               {errors.translations?.root && (
                 <p className="text-xs text-destructive">{errors.translations.root.message}</p>
@@ -544,17 +538,17 @@ export const DocumentsTab = () => {
               {translationFields.map((field, index) => {
                 const lang = languages.find(l => l.id === field.languageId);
                 return (
-                  <div key={field.id} className="p-4 rounded-xl border border-border bg-muted/10 space-y-3">
-                    <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border/50">
+                  <div key={field.id} className="p-4 space-y-3 border rounded-xl border-border bg-muted/10">
+                    <div className="flex items-center gap-2 pb-2 mb-2 border-b border-border/50">
                       <span className="text-lg">{lang?.flag || "🌐"}</span>
-                      <span className="font-medium text-sm">{lang?.name} <Badge variant="secondary" className="ml-1 text-[10px]">{lang?.code}</Badge></span>
+                      <span className="text-sm font-medium">{lang?.name} <Badge variant="secondary" className="ml-1 text-[10px]">{lang?.code}</Badge></span>
                     </div>
                     {/* Hidden Language ID */}
                     <input type="hidden" {...register(`translations.${index}.languageId`)} />
                     
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="sm:col-span-2">
-                        <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Title <span className="text-destructive ml-0.5">*</span></label>
+                        <label className="block mb-1 text-xs font-bold tracking-wider uppercase text-muted-foreground">Title <span className="text-destructive ml-0.5">*</span></label>
                         <Input
                           placeholder={`Title in ${lang?.name}`}
                           {...register(`translations.${index}.title`)}
@@ -565,7 +559,7 @@ export const DocumentsTab = () => {
                         )}
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Description <span className="text-destructive ml-0.5">*</span></label>
+                        <label className="block mb-1 text-xs font-bold tracking-wider uppercase text-muted-foreground">Description <span className="text-destructive ml-0.5">*</span></label>
                         <textarea
                           placeholder={`Description in ${lang?.name}`}
                           {...register(`translations.${index}.description`)}
@@ -581,10 +575,10 @@ export const DocumentsTab = () => {
               })}
             </div>
 
-            <div className="flex gap-3 pt-4 sticky bottom-0 bg-card border-t border-border mt-4 pb-2">
+            <div className="sticky bottom-0 flex gap-3 pt-4 pb-2 mt-4 border-t bg-card border-border">
               <Button type="button" variant="outline" className="flex-1 rounded-xl" onClick={closeForm}>{t("cancel")}</Button>
               <Button type="submit" className="flex-1 rounded-xl" disabled={isPending}>
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
                 {t("save")}
               </Button>
             </div>
@@ -596,13 +590,13 @@ export const DocumentsTab = () => {
       {/* View Translations Modal — Portal */}
       {viewingTranslations && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-foreground/30 backdrop-blur-md p-4 animate-in fade-in duration-300">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <FolderOpen className="h-5 w-5 text-primary" /> Document Details
+          <div className="w-full max-w-lg p-6 duration-200 border shadow-2xl rounded-2xl border-border bg-card animate-in zoom-in">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-border">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">
+                <FolderOpen className="w-5 h-5 text-primary" /> Document Details
               </h3>
-              <button onClick={closeView} className="rounded-full p-1 hover:bg-muted transition-colors">
-                <X className="h-5 w-5 text-muted-foreground" />
+              <button onClick={closeView} className="p-1 transition-colors rounded-full hover:bg-muted">
+                <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
             
@@ -611,13 +605,13 @@ export const DocumentsTab = () => {
               <div className="grid grid-cols-2 gap-4 pb-5 border-b border-border">
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                    <User className="h-3 w-3" /> Created By
+                    <User className="w-3 h-3" /> Created By
                   </span>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-foreground">
                       {viewingTranslations.createdBy
                         ? `${viewingTranslations.createdBy.firstName} ${viewingTranslations.createdBy.lastName}`
-                        : <span className="text-muted-foreground italic text-xs">Unknown</span>
+                        : <span className="text-xs italic text-muted-foreground">Unknown</span>
                       }
                     </span>
                     {viewingTranslations.createdBy?.email && (
@@ -628,7 +622,7 @@ export const DocumentsTab = () => {
 
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> Created At
+                    <Calendar className="w-3 h-3" /> Created At
                   </span>
                   <span className="text-sm font-semibold text-foreground">
                     {viewingTranslations.createdAt
@@ -645,9 +639,9 @@ export const DocumentsTab = () => {
 
                 <div className="flex flex-col gap-1.5 col-span-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                    <FileText className="h-3 w-3" /> Document Type
+                    <FileText className="w-3 h-3" /> Document Type
                   </span>
-                  <Badge variant="outline" className="w-fit text-xs font-semibold py-1 px-3">
+                  <Badge variant="outline" className="px-3 py-1 text-xs font-semibold w-fit">
                     {viewingTranslations.type || "N/A"}
                   </Badge>
                 </div>
@@ -655,24 +649,24 @@ export const DocumentsTab = () => {
 
               {/* Translations Section */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                <h4 className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-primary">
                   <Globe className="h-3.5 w-3.5" /> Content Translations
                 </h4>
               {viewingTranslations.translations?.map((tr, i) => {
                 const lang = languages.find(l => l.id === tr.languageId);
                 return (
-                  <div key={i} className="flex flex-col border-b border-border last:border-0 pb-4 last:pb-0">
+                  <div key={i} className="flex flex-col pb-4 border-b border-border last:border-0 last:pb-0">
                     <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
                        {lang?.name || tr.language?.name || `Lang ID ${tr.languageId}`}
                        {(lang?.code || tr.language?.code) && <Badge variant="outline" className="text-[9px] px-1 py-0">{lang?.code || tr.language?.code}</Badge>}
                     </span>
-                    <span className="font-semibold text-foreground mb-1">{tr.title}</span>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{tr.description}</p>
+                    <span className="mb-1 font-semibold text-foreground">{tr.title}</span>
+                    <p className="text-sm leading-relaxed text-muted-foreground">{tr.description}</p>
                   </div>
                 );
               })}
               {(!viewingTranslations.translations || viewingTranslations.translations.length === 0) && (
-                <p className="text-center text-muted-foreground italic py-4">No translations available.</p>
+                <p className="py-4 italic text-center text-muted-foreground">No translations available.</p>
               )}
               </div>
             </div>
@@ -693,6 +687,22 @@ export const DocumentsTab = () => {
             className="fixed z-[9998] w-48 rounded-xl border border-border bg-card p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
             style={{ top: menuPosition.top, right: menuPosition.right }}
           >
+            <button
+              onClick={() => {
+                const doc = paginatedData.find(d => d.id === showActionMenu);
+                const previewUrl = getDocumentPreviewUrl(doc);
+                if (previewUrl) {
+                  window.open(previewUrl, '_blank');
+                } else {
+                  toast.error("Preview link not available");
+                }
+                setShowActionMenu(null);
+              }}
+              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+            >
+              <Eye className="h-3.5 w-3.5 text-primary" />
+              <span>Preview File</span>
+            </button>
             <button
               onClick={() => {
                 const doc = paginatedData.find(d => d.id === showActionMenu);

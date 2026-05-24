@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Building2, LayoutDashboard, FileEdit, MessageSquare,
-  Globe, Users, Image, LogOut, Menu, X, User, Settings, ChevronRight, FileText, FolderOpen
+  Globe, Users, Image, LogOut, Menu, X, User, Settings, ChevronRight, FileText, FolderOpen, Languages
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ const UsersTab = lazy(() => import("./admin/UsersTab").then(m => ({ default: m.U
 const AccountTab = lazy(() => import("./admin/AccountTab").then(m => ({ default: m.AccountTab })));
 const DocumentTypesTab = lazy(() => import("./admin/DocumentTypesTab").then(m => ({ default: m.DocumentTypesTab })));
 const DocumentsTab = lazy(() => import("./admin/DocumentsTab").then(m => ({ default: m.DocumentsTab })));
+const ContentTranslationsTab = lazy(() => import("./admin/ContentTranslationsTab").then(m => ({ default: m.ContentTranslationsTab })));
 
 const sidebarItems = [
   { icon: LayoutDashboard, labelKey: "dashboard", id: "dashboard" },
@@ -32,12 +33,26 @@ const sidebarItems = [
   { icon: Image, labelKey: "contentPosters", id: "posters" },
   { icon: FileText, labelKey: "documentTypes", id: "documentTypes" },
   { icon: FolderOpen, labelKey: "documents", id: "documents" },
-  { icon: Globe, labelKey: "languages", id: "languages" },
+  { icon: Globe,          labelKey: "languages",            id: "languages" },
+  { icon: Languages,      labelKey: "contentTranslations",  id: "contentTranslations" },
 ];
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab]   = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // locale passed from LanguagesTab → ContentTranslationsTab after language creation
+  const [contentLocale, setContentLocale] = useState(null);
+
+  // Listen for cross-tab navigation events (e.g., from LanguagesTab)
+  useEffect(() => {
+    const handler = (e) => {
+      const { tab, locale } = e.detail || {};
+      if (tab) setActiveTab(tab);
+      if (locale) setContentLocale(locale);
+    };
+    window.addEventListener("admin-navigate-tab", handler);
+    return () => window.removeEventListener("admin-navigate-tab", handler);
+  }, []);
   const navigate = useNavigate();
   const { t } = useLanguage();
   const sessionExpiredHandled = useRef(false);
@@ -107,6 +122,7 @@ const Admin = () => {
         case "posters":       return <PostersTab />;
         case "requests":      return <RequestsTab />;
         case "languages":     return <LanguagesTab />;
+        case "contentTranslations": return <ContentTranslationsTab initialLocale={contentLocale} />;
         case "account":       return <AccountTab />;
         default:           return <DashboardTab />;
       }

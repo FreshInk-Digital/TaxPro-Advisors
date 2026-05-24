@@ -5,14 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { documentsApi, resolveAssetUrl } from "@/lib/api";
+import { documentsApi, getDocumentDownloadUrl, getDocumentPreviewUrl } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/skeleton";
-
-const getDocumentDownloadUrl = (doc) =>
-  resolveAssetUrl(doc?.downloadUrl || doc?.download_url || doc?.file_url || doc?.documentUrl || doc?.document_url);
-
-const getDocumentFileUrl = (doc) =>
-  resolveAssetUrl(doc?.documentUrl || doc?.document_url || doc?.file_url || doc?.downloadUrl || doc?.download_url);
 
 const Documentation = () => {
   const [activeCategory, setActiveCategory] = useState("All Documents");
@@ -101,7 +95,7 @@ const Documentation = () => {
               ) : filtered.map((doc) => {
                 const tr = getTranslation(doc);
                 const downloadUrl = getDocumentDownloadUrl(doc);
-                const fileUrl = getDocumentFileUrl(doc);
+                const previewUrl = getDocumentPreviewUrl(doc);
                 return (
                   <div key={doc.id} className="rounded-xl border border-border bg-card p-5 flex flex-col">
                     <div className="flex items-start gap-3 mb-3">
@@ -122,9 +116,9 @@ const Documentation = () => {
                           <span><Download className="mr-1.5 h-3.5 w-3.5" /> {t("download")}</span>
                         )}
                       </Button>
-                      <Button variant="outline" size="sm" disabled={!fileUrl} asChild={!!fileUrl}>
-                        {fileUrl ? (
-                          <a href={fileUrl} target="_blank" rel="noreferrer"><Eye className="mr-1.5 h-3.5 w-3.5" /> {t("preview")}</a>
+                      <Button variant="outline" size="sm" disabled={!previewUrl} asChild={!!previewUrl}>
+                        {previewUrl ? (
+                          <a href={previewUrl} target="_blank" rel="noreferrer"><Eye className="mr-1.5 h-3.5 w-3.5" /> {t("preview")}</a>
                         ) : (
                           <span><Eye className="mr-1.5 h-3.5 w-3.5" /> {t("preview")}</span>
                         )}

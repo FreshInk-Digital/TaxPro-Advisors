@@ -83,22 +83,38 @@ export const RequestsTab = () => {
 
   const getLanguage = (languageId) => languages.find(item => Number(item.id) === Number(languageId));
 
-  const getServiceTitle = (service) => {
+  const getServiceId = (request) => request?.serviceId ?? request?.service_id ?? request?.service?.id ?? null;
+
+  const getTranslationLanguageCode = (translation) =>
+    translation?.language?.code || getLanguage(translation?.languageId ?? translation?.language_id)?.code;
+
+  const getServiceTitle = (service, fallbackId = null) => {
     const translations = service?.translations || [];
-    return translations.find(tr => getLanguage(tr.languageId)?.code === lang)?.title
-      || translations.find(tr => getLanguage(tr.languageId)?.code === "en")?.title
+    return service?.translation?.title
+      || translations.find(tr => getTranslationLanguageCode(tr) === lang)?.title
+      || translations.find(tr => getTranslationLanguageCode(tr) === "en")?.title
       || translations[0]?.title
-      || `Service #${service?.id || service?.serviceId}`;
+      || service?.title
+      || service?.name
+      || (fallbackId ? `Service #${fallbackId}` : "—");
   };
 
   const getRequestService = (request) => {
-    return request?.service || services.find(service => Number(service.id) === Number(request?.serviceId));
+    const serviceId = getServiceId(request);
+    return request?.service || services.find(service => Number(service.id) === Number(serviceId));
   };
+
+  const getRequestServiceTitle = (request) =>
+    request?.serviceName
+    || request?.service_name
+    || request?.serviceTitle
+    || request?.service_title
+    || getServiceTitle(getRequestService(request), getServiceId(request));
 
   const filteredRequests = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return requests.filter(request => {
-      const serviceTitle = getServiceTitle(getRequestService(request)).toLowerCase();
+      const serviceTitle = getRequestServiceTitle(request).toLowerCase();
       return request.fullName?.toLowerCase().includes(q)
         || request.email?.toLowerCase().includes(q)
         || request.phone?.toLowerCase().includes(q)
@@ -118,7 +134,7 @@ export const RequestsTab = () => {
 
   const initializeForm = (request = null) => {
     reset({
-      serviceId: request?.serviceId ? String(request.serviceId) : "",
+      serviceId: getServiceId(request) ? String(getServiceId(request)) : "",
       fullName: request?.fullName || "",
       email: request?.email || "",
       phone: request?.phone || "",
@@ -303,7 +319,7 @@ export const RequestsTab = () => {
                           <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {request.phone}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-muted-foreground">{getServiceTitle(getRequestService(request))}</td>
+                      <td className="px-4 py-4 text-muted-foreground">{getRequestServiceTitle(request)}</td>
                       <td className="px-4 py-4"><Badge variant="outline" className="uppercase">{request.locale || "en"}</Badge></td>
                       <td className="px-4 py-4 text-muted-foreground whitespace-nowrap text-xs">{request.created_at || request.createdAt ? new Date(request.created_at || request.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
                       <td className="px-4 py-4 text-right">
@@ -367,7 +383,7 @@ export const RequestsTab = () => {
                   <Select value={field.value?.toString() || ""} onValueChange={field.onChange}>
                     <SelectTrigger className={cn("rounded-xl w-full", errors.serviceId && "border-destructive")}><SelectValue placeholder="Select Service" /></SelectTrigger>
                     <SelectContent className="z-[10001]">
-                      {services.map(service => <SelectItem key={service.id} value={String(service.id)}>{getServiceTitle(service)}</SelectItem>)}
+                      {services.map(service => <SelectItem key={service.id} value={String(service.id)}>{getServiceTitle(service, service.id)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 )}
@@ -460,7 +476,7 @@ export const RequestsTab = () => {
               </div>
               <div className="rounded-xl border border-border bg-muted/10 p-3">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Service</span>
-                <p className="mt-1 text-sm font-semibold text-foreground">{getServiceTitle(getRequestService(viewingRequest))}</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{getRequestServiceTitle(viewingRequest)}</p>
               </div>
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Message</span>

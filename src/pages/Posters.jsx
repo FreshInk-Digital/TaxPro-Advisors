@@ -3,15 +3,8 @@ import { FileText, Download, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
-import { postersApi, resolveAssetUrl } from "@/lib/api";
+import { getPosterPreviewUrl, postersApi } from "@/lib/api";
 import { SkeletonPosters } from "@/components/ui/skeleton";
-
-const getPosterFileUrl = (poster) => {
-  if (poster?.id) {
-    return postersApi.getImageUrl(poster.id);
-  }
-  return resolveAssetUrl(poster?.file_url || poster?.image_url || poster?.posterImage || poster?.image_path);
-};
 
 const Posters = () => {
   const { t, lang } = useLanguage();
@@ -61,7 +54,7 @@ const Posters = () => {
             <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {posters.map((poster) => {
                 const tr = getTranslation(poster);
-                const posterUrl = getPosterFileUrl(poster);
+                const posterUrl = getPosterPreviewUrl(poster);
                 return (
                   <div
                     key={poster.id}

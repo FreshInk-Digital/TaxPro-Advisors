@@ -81,13 +81,13 @@ const Services = () => {
         locale: lang === "sw" ? "sw" : "en",
       });
       if (res?.success) {
-        toast.success("Request submitted! We'll contact you shortly.");
+        toast.success(t("requestSubmittedToast"));
         reset();
       } else {
-        toast.error(res?.message || "Submission failed.");
+        toast.error(res?.message || t("submissionFailed"));
       }
     } catch (err) {
-      toast.error(err?.message || "Unable to submit. Please try again.");
+      toast.error(err?.message || t("unableToSubmit"));
     }
   };
 
@@ -170,7 +170,7 @@ const Services = () => {
               <label htmlFor="svc-fullname" className="mb-1.5 block text-sm font-medium text-foreground">
                 {t("fullName")} <span className="text-destructive">*</span>
               </label>
-              <Input id="svc-fullname" placeholder="e.g. Jane Smith" {...register("fullName")}
+              <Input id="svc-fullname" placeholder={t("fullNamePlaceholder")} {...register("fullName")}
                 className={errors.fullName ? "border-destructive" : ""} />
               {errors.fullName && <p className="mt-1 text-xs text-destructive">{errors.fullName.message}</p>}
             </div>
@@ -179,7 +179,7 @@ const Services = () => {
               <label htmlFor="svc-email" className="mb-1.5 block text-sm font-medium text-foreground">
                 {t("emailAddress")} <span className="text-destructive">*</span>
               </label>
-              <Input id="svc-email" type="email" placeholder="jane@example.com" {...register("email")}
+              <Input id="svc-email" type="email" placeholder={t("emailPlaceholder")} {...register("email")}
                 className={errors.email ? "border-destructive" : ""} />
               {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
             </div>
@@ -188,7 +188,7 @@ const Services = () => {
               <label htmlFor="svc-phone" className="mb-1.5 block text-sm font-medium text-foreground">
                 {t("phone")} <span className="text-destructive">*</span>
               </label>
-              <Input id="svc-phone" type="tel" placeholder="255712345678" {...register("phone")}
+              <Input id="svc-phone" type="tel" placeholder={t("phonePlaceholder")} {...register("phone")}
                 className={errors.phone ? "border-destructive" : ""} />
               {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
             </div>
@@ -202,7 +202,7 @@ const Services = () => {
                 onValueChange={(val) => setValue("serviceId", val, { shouldValidate: true })}
               >
                 <SelectTrigger id="svc-service" className={errors.serviceId ? "border-destructive" : ""}>
-                  <SelectValue placeholder={t("selectServiceShort")} />
+                  <SelectValue placeholder={t("selectServicePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {services.map((s) => {
@@ -222,14 +222,14 @@ const Services = () => {
               <label htmlFor="svc-msg" className="mb-1.5 block text-sm font-medium text-foreground">
                 {t("additionalInfo")} <span className="text-destructive">*</span>
               </label>
-              <Textarea id="svc-msg" placeholder="Please briefly describe your situation..." rows={4}
+              <Textarea id="svc-msg" placeholder={t("shortMessagePlaceholder")} rows={4}
                 {...register("message")} className={errors.message ? "border-destructive" : ""} />
               {errors.message && <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>}
             </div>
 
             <Button id="svc-submit-btn" type="submit" className="w-full gradient-primary text-primary-foreground" disabled={isSubmitting}>
               {isSubmitting ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting…</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("submitting")}</>
               ) : (
                 <>{t("submitRequest")} <ArrowRight className="ml-2 h-4 w-4" /></>
               )}

@@ -6,6 +6,15 @@
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api/v1").replace(/\/+$/, "");
 let sessionExpiredNotified = false;
 
+function apiUrl(path) {
+  const cleanPath = String(path || "").replace(/^\/+/, "");
+  return `${BASE_URL}/${cleanPath}`;
+}
+
+function firstString(...values) {
+  return values.find((value) => typeof value === "string" && value.trim() !== "") || null;
+}
+
 export function resolveAssetUrl(value) {
   if (!value) return null;
 
@@ -33,6 +42,58 @@ export function resolveAssetUrl(value) {
   if (value.startsWith("/")) return `${origin}${value}`;
   if (value.startsWith("storage/")) return `${origin}/${value}`;
   return `${origin}/storage/${value}`;
+}
+
+export function getDocumentPreviewUrl(doc) {
+  const url = resolveAssetUrl(firstString(doc?.previewUrl, doc?.preview_url));
+  if (url) return url;
+
+  if (doc?.id) return apiUrl(`/documents/${doc.id}/preview`);
+
+  return resolveAssetUrl(firstString(
+    doc?.documentUrl,
+    doc?.document_url,
+    doc?.file_url,
+    doc?.downloadUrl,
+    doc?.download_url,
+    doc?.document_path
+  ));
+}
+
+export function getDocumentDownloadUrl(doc) {
+  const url = resolveAssetUrl(firstString(doc?.downloadUrl, doc?.download_url));
+  if (url) return url;
+
+  if (doc?.id) return apiUrl(`/documents/${doc.id}/download`);
+
+  return resolveAssetUrl(firstString(
+    doc?.documentUrl,
+    doc?.document_url,
+    doc?.file_url,
+    doc?.previewUrl,
+    doc?.preview_url,
+    doc?.document_path
+  ));
+}
+
+export function getPosterPreviewUrl(poster) {
+  const url = resolveAssetUrl(firstString(
+    poster?.previewUrl,
+    poster?.preview_url,
+    poster?.imageEndpointUrl,
+    poster?.image_endpoint_url
+  ));
+  if (url) return url;
+
+  if (poster?.id) return apiUrl(`/posters/${poster.id}/image`);
+
+  return resolveAssetUrl(firstString(
+    poster?.imageUrl,
+    poster?.image_url,
+    poster?.file_url,
+    poster?.posterImage,
+    poster?.image_path
+  ));
 }
 
 
@@ -117,7 +178,7 @@ export function getLocale() {
 // Core fetch wrapper
 // All GET requests automatically carry Accept-Language: <current_locale>
 // --------------------------------------------------------------------------
-async function apiFetch(path, options = {}) {
+export async function apiFetch(path, options = {}) {
   const { method = "GET", body, isFormData = false, locale, requireAuth = false } = options;
 
   const token = getToken();

@@ -17,23 +17,23 @@ const Footer = () => {
               </div>
               <span className="text-lg font-bold text-foreground">TaxPro</span>
             </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed">{t("footerDesc")}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{t("footerDescription")}</p>
           </div>
           <div>
-            <h4 className="font-semibold text-foreground mb-3 text-sm">{t("quickLinks")}</h4>
+            <h4 className="font-semibold text-foreground mb-3 text-sm">{t("footerQuickLinksTitle")}</h4>
             <nav className="flex flex-col gap-2">
               {[
-                { label: t("services"), path: "/services" },
-                { label: t("documentation"), path: "/documentation" },
-                { label: t("posters"), path: "/posters" },
-                { label: t("serviceRequest"), path: "/service-request" },
+                { label: t("footerServicesLink"), path: "/services" },
+                { label: t("footerDocumentationLink"), path: "/documentation" },
+                { label: t("footerPostersLink"), path: "/posters" },
+                { label: t("footerServiceRequestLink"), path: "/service-request" },
               ].map((l) => (
                 <Link key={l.path} to={l.path} className="text-sm text-muted-foreground hover:text-primary transition-colors">{l.label}</Link>
               ))}
             </nav>
           </div>
           <div>
-            <h4 className="font-semibold text-foreground mb-3 text-sm">{t("contact")}</h4>
+            <h4 className="font-semibold text-foreground mb-3 text-sm">{t("footerContactTitle")}</h4>
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> info@taxpro.com</span>
               <span className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> +1 (555) 123-4567</span>
@@ -41,14 +41,14 @@ const Footer = () => {
             </div>
           </div>
           <div>
-            <h4 className="font-semibold text-foreground mb-3 text-sm">{t("newsletter")}</h4>
-            <p className="text-sm text-muted-foreground">{t("newsletterDesc")}</p>
+            <h4 className="font-semibold text-foreground mb-3 text-sm">{t("footerNewsletterTitle")}</h4>
+            <p className="text-sm text-muted-foreground">{t("footerNewsletterDescription")}</p>
           </div>
         </div>
       </div>
       <div className="border-t border-border">
         <div className="container py-4 text-center">
-          <p className="text-xs text-muted-foreground">{t("footerCopy")}</p>
+          <p className="text-xs text-muted-foreground">{t("copy_below_all")}</p>
         </div>
       </div>
     </footer>
