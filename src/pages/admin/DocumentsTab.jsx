@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Pencil, Loader2, X, Search, Filter,
-  MoreVertical, CheckCircle2, FileText, Globe, Eye, UploadCloud,
+  MoreVertical, CheckCircle2, FileText, Globe, Eye, UploadCloud, Sparkles,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FolderOpen, Download, Calendar, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,24 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ContentHeader } from "@/components/admin/ContentHeader";
 import { cn } from "@/lib/utils";
 import { useResponseDialog } from "@/components/ui/response-dialog";
+
+function getCaseCode(doc) {
+  return doc?.caseCode || doc?.case_code || `#${doc?.id ?? "—"}`;
+}
+
+function buildCaseCode(year, sequence) {
+  return `3${year}${String(sequence).padStart(4, "0")}`;
+}
+
+function getNumericCaseCodeParts(caseCode) {
+  const raw = String(caseCode || "").trim();
+  const match = raw.match(/^3(\d{4})(\d{4})$/);
+  if (!match) return null;
+  return {
+    year: match[1],
+    sequence: Number(match[2]),
+  };
+}
 
 export const DocumentsTab = () => {
   const { t } = useLanguage();
@@ -75,11 +93,12 @@ export const DocumentsTab = () => {
     return documents.filter(doc => {
       const q = searchQuery.toLowerCase();
       const inStatus = doc.status?.toLowerCase().includes(q);
+      const inCaseCode = String(doc.caseCode || doc.case_code || "").toLowerCase().includes(q);
       const inTrans = doc.translations?.some(tr => 
         tr.title?.toLowerCase().includes(q) || tr.description?.toLowerCase().includes(q)
       );
       const inDt = doc.document_type?.translations?.some(tr => tr.name?.toLowerCase().includes(q));
-      return inStatus || inTrans || inDt;
+      return inStatus || inCaseCode || inTrans || inDt;
     });
   }, [documents, searchQuery]);
 
@@ -91,12 +110,33 @@ export const DocumentsTab = () => {
 
   const showingStart = filteredDocuments.length > 0 ? (currentPage - 1) * rowsPerPage + 1 : 0;
   const showingEnd = Math.min(currentPage * rowsPerPage, filteredDocuments.length);
+  const nextCaseCode = useMemo(() => {
+    const year = new Date().getFullYear();
+    const prefix = `3${year}`;
+    const nextSequence = documents.reduce((max, doc) => {
+      const parts = getNumericCaseCodeParts(doc.caseCode || doc.case_code);
+      if (!parts || parts.year !== String(year)) return max;
+      return Math.max(max, parts.sequence);
+    }, 0) + 1;
+
+    return buildCaseCode(year, nextSequence);
+  }, [documents]);
+
+  const isCaseCodeUnique = (candidate, currentId = null) => {
+    const normalized = String(candidate || "").trim();
+    if (!normalized) return false;
+    return !documents.some((doc) => {
+      if (currentId && Number(doc.id) === Number(currentId)) return false;
+      return String(doc.caseCode || doc.case_code || "").trim().toLowerCase() === normalized.toLowerCase();
+    });
+  };
 
   // ── Form ────────────────────────────────────────────────────────────────────
-  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, reset, control, setError, clearErrors, setValue, watch, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(documentSchema),
-    defaultValues: { status: "active", documentTypeId: "", custom_file_name: "", translations: [] },
+    defaultValues: { status: "active", documentTypeId: "", custom_file_name: "", caseCode: "", translations: [] },
   });
+  const watchedCaseCode = watch("caseCode");
 
   const { fields: translationFields } = useFieldArray({
     control,
@@ -119,11 +159,12 @@ export const DocumentsTab = () => {
         status: editingDoc.status || "active", 
         documentTypeId: String(editingDoc.documentTypeId || editingDoc.document_type_id || ""),
         custom_file_name: editingDoc.custom_file_name || "",
+        caseCode: editingDoc.caseCode || editingDoc.case_code || "",
         translations: populatedTrans 
       });
     } else {
       const emptyTrans = languages.map(lang => ({ languageId: lang.id, title: "", description: "" }));
-      reset({ status: "active", documentTypeId: "", custom_file_name: "", translations: emptyTrans });
+      reset({ status: "active", documentTypeId: "", custom_file_name: "", caseCode: nextCaseCode, translations: emptyTrans });
     }
   };
 
@@ -189,9 +230,21 @@ export const DocumentsTab = () => {
       return;
     }
 
+    const normalizedCaseCode = String(values.caseCode || "").trim();
+    if (!normalizedCaseCode) {
+      setError("caseCode", { type: "manual", message: "Case code is required." });
+      return;
+    }
+    if (!isCaseCodeUnique(normalizedCaseCode, editing?.id || null)) {
+      setError("caseCode", { type: "manual", message: "Case code must be unique." });
+      return;
+    }
+    clearErrors("caseCode");
+
     const formData = new FormData();
     formData.append("documentTypeId", values.documentTypeId);
     formData.append("status", values.status);
+    formData.append("caseCode", normalizedCaseCode);
     if (values.custom_file_name) formData.append("custom_file_name", values.custom_file_name);
 
     values.translations.forEach((t, i) => {
@@ -233,7 +286,7 @@ export const DocumentsTab = () => {
     <>
       <div className="space-y-6 duration-500 animate-in fade-in">
         <ContentHeader
-          title={"Documents"}
+          title="Documents"
           breadcrumbs={[
             { label: "Documents", path: "/admin/documents" },
             { label: "List" },
@@ -252,7 +305,7 @@ export const DocumentsTab = () => {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search documents..."
+                  placeholder="Search documents, case code..."
                   className="pl-10 rounded-xl bg-background border-border"
                   value={searchQuery}
                   onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
@@ -295,7 +348,7 @@ export const DocumentsTab = () => {
           </div>
 
           {/* Table */}
-          {isLoading || isLoadingLanguages || isLoadingDt ? <SkeletonTable rows={5} cols={5} /> : (
+          {isLoading || isLoadingLanguages || isLoadingDt ? <SkeletonTable rows={5} cols={8} /> : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -310,6 +363,7 @@ export const DocumentsTab = () => {
                       />
                     </th>
                     <th className="w-12 px-2 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">#</th>
+                    <th className="px-4 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Case Code</th>
                     <th className="px-4 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Document</th>
                     <th className="px-4 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Type</th>
                     <th className="px-4 py-4 text-left font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Status</th>
@@ -319,13 +373,13 @@ export const DocumentsTab = () => {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {paginatedData.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-12 italic text-center text-muted-foreground">{t("noData")}</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-12 italic text-center text-muted-foreground">{t("noData")}</td></tr>
                   ) : paginatedData.map((doc, index) => {
                     const titleToShow = doc.translations?.find(t => t.language?.code === "en")?.title 
                       || doc.translations?.[0]?.title 
                       || doc.custom_file_name 
                       || "Unnamed Document";
-                      
+                    const caseCode = getCaseCode(doc);
                     const typeName = doc.type || `Type #${doc.documentTypeId}`;
 
                     return (
@@ -339,6 +393,11 @@ export const DocumentsTab = () => {
                           />
                         </td>
                         <td className="px-2 py-4 font-medium text-muted-foreground">{(currentPage - 1) * rowsPerPage + index + 1}</td>
+                        <td className="px-4 py-4">
+                          <Badge variant="outline" className="rounded-lg px-2 py-0.5 text-[10px] font-bold tracking-wide">
+                            {caseCode}
+                          </Badge>
+                        </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center text-xs font-bold border rounded-full h-9 w-9 bg-primary/10 text-primary border-primary/10">
@@ -502,6 +561,39 @@ export const DocumentsTab = () => {
             </div>
 
             <div>
+              <div className="mb-1.5 flex items-center justify-between gap-3">
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Case Code <span className="text-destructive ml-0.5">*</span>
+                </label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 rounded-full px-2.5 text-[10px] font-semibold uppercase tracking-wider text-primary hover:bg-primary/10"
+                  onClick={() => {
+                    const candidate = nextCaseCode;
+                    setValue("caseCode", candidate, { shouldDirty: true, shouldValidate: true });
+                    clearErrors("caseCode");
+                  }}
+                >
+                  <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                  Auto-generate
+                </Button>
+              </div>
+              <Input
+                placeholder={nextCaseCode}
+                {...register("caseCode", {
+                  onChange: () => clearErrors("caseCode"),
+                })}
+                className={cn("rounded-xl", errors.caseCode && "border-destructive")}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Must be unique. Example format: <span className="font-mono">{nextCaseCode}</span>
+              </p>
+              {errors.caseCode && <p className="mt-1 text-xs text-destructive">{errors.caseCode.message}</p>}
+            </div>
+
+            <div>
               <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Custom File Name (Optional)</label>
               <Input placeholder="my-document.pdf" {...register("custom_file_name")} className="rounded-xl" />
             </div>
@@ -643,6 +735,14 @@ export const DocumentsTab = () => {
                   </span>
                   <Badge variant="outline" className="px-3 py-1 text-xs font-semibold w-fit">
                     {viewingTranslations.type || "N/A"}
+                  </Badge>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+                    <FileText className="w-3 h-3" /> Case Code
+                  </span>
+                  <Badge variant="outline" className="px-3 py-1 text-xs font-semibold w-fit">
+                    {getCaseCode(viewingTranslations)}
                   </Badge>
                 </div>
               </div>

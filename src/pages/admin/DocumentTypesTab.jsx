@@ -187,27 +187,27 @@ export const DocumentTypesTab = () => {
 
   return (
     <>
-      <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="space-y-6 duration-500 animate-in fade-in">
         <ContentHeader
-          title={t("documentTypes") || "Document Types"}
+          title="Document Types"
           breadcrumbs={[
             { label: "Document Types", path: "/admin/document-types" },
             { label: "List" },
           ]}
         >
           <Button onClick={() => { initializeForm(); setShowForm(true); }} className="shadow-lg shadow-primary/20">
-            <Plus className="mr-2 h-4 w-4" /> {t("addNew")}
+            <Plus className="w-4 h-4 mr-2" /> {t("addNew")}
           </Button>
         </ContentHeader>
 
         {/* Table Card */}
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="overflow-hidden border shadow-sm rounded-2xl border-border bg-card">
 
           {/* Toolbar */}
-          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between border-b border-border bg-muted/20">
-            <div className="flex flex-1 items-center gap-3">
+          <div className="flex flex-col gap-4 p-4 border-b sm:flex-row sm:items-center sm:justify-between border-border bg-muted/20">
+            <div className="flex items-center flex-1 gap-3">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search document types..."
                   className="pl-10 rounded-xl bg-background border-border"
@@ -219,7 +219,7 @@ export const DocumentTypesTab = () => {
                 <Button
                   variant="destructive"
                   size="sm"
-                  className="rounded-xl animate-in slide-in-from-left-2 duration-300"
+                  className="duration-300 rounded-xl animate-in slide-in-from-left-2"
                   onClick={async () => {
                     const ok = await showDialog({
                       variant: "confirm",
@@ -231,7 +231,7 @@ export const DocumentTypesTab = () => {
                     if (ok) bulkDeleteMutation.mutate(selectedIds);
                   }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="w-4 h-4 mr-2" />
                   Delete ({selectedIds.length})
                 </Button>
               )}
@@ -240,7 +240,7 @@ export const DocumentTypesTab = () => {
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>Show</span>
                 <Select value={String(rowsPerPage)} onValueChange={(v) => { setRowsPerPage(Number(v)); setCurrentPage(1); }}>
-                  <SelectTrigger className="h-9 w-20 rounded-lg"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-20 rounded-lg h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="10">10</SelectItem>
                     <SelectItem value="25">25</SelectItem>
@@ -275,7 +275,7 @@ export const DocumentTypesTab = () => {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {paginatedData.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground italic">{t("noData")}</td></tr>
+                    <tr><td colSpan={6} className="px-4 py-12 italic text-center text-muted-foreground">{t("noData")}</td></tr>
                   ) : paginatedData.map((dt, index) => {
                     // Try to show english or first available name
                     const nameToShow = dt.translations?.find(t => t.language?.code === "en")?.name 
@@ -292,11 +292,11 @@ export const DocumentTypesTab = () => {
                             onChange={() => toggleSelect(dt.id)}
                           />
                         </td>
-                        <td className="px-2 py-4 text-muted-foreground font-medium">{(currentPage - 1) * rowsPerPage + index + 1}</td>
+                        <td className="px-2 py-4 font-medium text-muted-foreground">{(currentPage - 1) * rowsPerPage + index + 1}</td>
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary border border-primary/10">
-                              <FileText className="h-4 w-4" />
+                            <div className="flex items-center justify-center text-xs font-bold border rounded-full h-9 w-9 bg-primary/10 text-primary border-primary/10">
+                              <FileText className="w-4 h-4" />
                             </div>
                             <span className="font-semibold text-foreground">{nameToShow}</span>
                           </div>
@@ -306,7 +306,7 @@ export const DocumentTypesTab = () => {
                             {dt.status === "notActive" ? "INACTIVE" : dt.status}
                           </Badge>
                         </td>
-                        <td className="px-4 py-4 text-muted-foreground whitespace-nowrap text-xs">
+                        <td className="px-4 py-4 text-xs text-muted-foreground whitespace-nowrap">
                           {dt.createdAt ? new Date(dt.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                         </td>
                         <td className="px-4 py-4 text-right">
@@ -314,7 +314,7 @@ export const DocumentTypesTab = () => {
                             ref={(el) => (actionBtnRefs.current[dt.id] = el)}
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 rounded-full hover:bg-muted"
+                            className="w-8 h-8 p-0 rounded-full hover:bg-muted"
                             onClick={(e) => {
                               const rect = e.currentTarget.getBoundingClientRect();
                               setMenuPosition({
@@ -324,7 +324,7 @@ export const DocumentTypesTab = () => {
                               setShowActionMenu(showActionMenu === dt.id ? null : dt.id);
                             }}
                           >
-                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
                           </Button>
                         </td>
                       </tr>
@@ -336,16 +336,16 @@ export const DocumentTypesTab = () => {
           )}
 
           {/* Pagination */}
-          <div className="flex flex-col gap-4 border-t border-border bg-muted/10 px-4 py-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 px-4 py-4 text-sm border-t border-border bg-muted/10 text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <p>
               Showing <span className="font-semibold text-foreground">{showingStart}</span> to <span className="font-semibold text-foreground">{showingEnd}</span> of <span className="font-semibold text-foreground">{filteredDocumentTypes.length}</span> document types
             </p>
             <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-                <ChevronsLeft className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                <ChevronsLeft className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
-                <ChevronLeft className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
+                <ChevronLeft className="w-4 h-4" />
               </Button>
               <div className="flex items-center gap-1 mx-2">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -367,11 +367,11 @@ export const DocumentTypesTab = () => {
                   );
                 })}
               </div>
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages || totalPages === 0}>
-                <ChevronRight className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages || totalPages === 0}>
+                <ChevronRight className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0}>
-                <ChevronsRight className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0}>
+                <ChevronsRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -386,10 +386,10 @@ export const DocumentTypesTab = () => {
             className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in zoom-in duration-200 space-y-4 max-h-[90vh] overflow-y-auto"
             noValidate
           >
-            <div className="flex items-center justify-between border-b border-border pb-4 sticky top-0 bg-card z-10">
+            <div className="sticky top-0 z-10 flex items-center justify-between pb-4 border-b border-border bg-card">
               <h3 className="text-lg font-bold text-foreground">{editing ? t("edit") : t("addNew")} Document Type</h3>
-              <button type="button" onClick={closeForm} className="rounded-full p-1 hover:bg-muted transition-colors">
-                <X className="h-5 w-5 text-muted-foreground" />
+              <button type="button" onClick={closeForm} className="p-1 transition-colors rounded-full hover:bg-muted">
+                <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
 
@@ -400,7 +400,7 @@ export const DocumentTypesTab = () => {
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="rounded-xl w-full">
+                    <SelectTrigger className="w-full rounded-xl">
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
                     <SelectContent className="z-[10001]">
@@ -412,9 +412,9 @@ export const DocumentTypesTab = () => {
               />
             </div>
 
-            <div className="space-y-4 pt-2">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Globe className="h-4 w-4 text-primary" /> Translations
+            <div className="pt-2 space-y-4">
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Globe className="w-4 h-4 text-primary" /> Translations
               </h4>
               {errors.translations?.root && (
                 <p className="text-xs text-destructive">{errors.translations.root.message}</p>
@@ -422,16 +422,16 @@ export const DocumentTypesTab = () => {
               {translationFields.map((field, index) => {
                 const lang = languages.find(l => l.id === field.languageId);
                 return (
-                  <div key={field.id} className="p-3 rounded-xl border border-border bg-muted/10 space-y-3">
+                  <div key={field.id} className="p-3 space-y-3 border rounded-xl border-border bg-muted/10">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-lg">{lang?.flag || "🌐"}</span>
-                      <span className="font-medium text-sm">{lang?.name} <Badge variant="secondary" className="ml-1 text-[10px]">{lang?.code}</Badge></span>
+                      <span className="text-sm font-medium">{lang?.name} <Badge variant="secondary" className="ml-1 text-[10px]">{lang?.code}</Badge></span>
                     </div>
                     {/* Hidden Language ID */}
                     <input type="hidden" {...register(`translations.${index}.languageId`)} />
                     
                     <div>
-                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Name <span className="text-destructive ml-0.5">*</span></label>
+                      <label className="block mb-1 text-xs font-bold tracking-wider uppercase text-muted-foreground">Name <span className="text-destructive ml-0.5">*</span></label>
                       <Input
                         placeholder={`Name in ${lang?.name}`}
                         {...register(`translations.${index}.name`)}
@@ -446,10 +446,10 @@ export const DocumentTypesTab = () => {
               })}
             </div>
 
-            <div className="flex gap-3 pt-4 sticky bottom-0 bg-card border-t border-border mt-4 pb-2">
+            <div className="sticky bottom-0 flex gap-3 pt-4 pb-2 mt-4 border-t bg-card border-border">
               <Button type="button" variant="outline" className="flex-1 rounded-xl" onClick={closeForm}>{t("cancel")}</Button>
               <Button type="submit" className="flex-1 rounded-xl" disabled={isPending}>
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
                 {t("save")}
               </Button>
             </div>
@@ -461,13 +461,13 @@ export const DocumentTypesTab = () => {
       {/* View Translations Modal — Portal */}
       {viewingTranslations && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-foreground/30 backdrop-blur-md p-4 animate-in fade-in duration-300">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Globe className="h-5 w-5 text-primary" /> Translations View
+          <div className="w-full max-w-md p-6 duration-200 border shadow-2xl rounded-2xl border-border bg-card animate-in zoom-in">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-border">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">
+                <Globe className="w-5 h-5 text-primary" /> Translations View
               </h3>
-              <button onClick={closeView} className="rounded-full p-1 hover:bg-muted transition-colors">
-                <X className="h-5 w-5 text-muted-foreground" />
+              <button onClick={closeView} className="p-1 transition-colors rounded-full hover:bg-muted">
+                <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
             
@@ -476,12 +476,12 @@ export const DocumentTypesTab = () => {
               <div className="grid grid-cols-2 gap-3 pb-4 border-b border-border">
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                    <User className="h-3 w-3" /> Created By
+                    <User className="w-3 h-3" /> Created By
                   </span>
                   <span className="text-sm font-medium text-foreground">
                     {viewingTranslations.createdBy
                       ? `${viewingTranslations.createdBy.firstName} ${viewingTranslations.createdBy.lastName}`
-                      : <span className="text-muted-foreground italic text-xs">Unknown</span>
+                      : <span className="text-xs italic text-muted-foreground">Unknown</span>
                     }
                   </span>
                   {viewingTranslations.createdBy?.email && (
@@ -490,7 +490,7 @@ export const DocumentTypesTab = () => {
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> Created At
+                    <Calendar className="w-3 h-3" /> Created At
                   </span>
                   <span className="text-sm font-medium text-foreground">
                     {viewingTranslations.createdAt
@@ -504,7 +504,7 @@ export const DocumentTypesTab = () => {
               {viewingTranslations.translations?.map((tr, i) => {
                 const lang = languages.find(l => l.id === tr.languageId);
                 return (
-                  <div key={i} className="flex flex-col border-b border-border last:border-0 pb-3 last:pb-0">
+                  <div key={i} className="flex flex-col pb-3 border-b border-border last:border-0 last:pb-0">
                     <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-1.5">
                        {lang?.name || tr.language?.name || `Lang ID ${tr.languageId}`}
                        {(lang?.code || tr.language?.code) && <Badge variant="outline" className="text-[9px] px-1 py-0">{lang?.code || tr.language?.code}</Badge>}
@@ -514,7 +514,7 @@ export const DocumentTypesTab = () => {
                 );
               })}
               {(!viewingTranslations.translations || viewingTranslations.translations.length === 0) && (
-                <p className="text-center text-muted-foreground italic py-4">No translations available.</p>
+                <p className="py-4 italic text-center text-muted-foreground">No translations available.</p>
               )}
             </div>
 

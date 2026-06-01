@@ -20,6 +20,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { servicesApi, publicApi } from "@/lib/api";
 import { serviceRequestSchema } from "@/lib/schemas";
 import { SkeletonCard } from "@/components/ui/skeleton";
+import { siteConfig } from "@/lib/siteConfig";
 
 const fallbackIcons = [Building2, User, Shield, Globe];
 
@@ -148,14 +149,14 @@ const Services = () => {
                 <span className="text-primary">📞</span>
                 <div>
                   <p className="font-semibold text-sm text-foreground">{t("directLine")}</p>
-                  <p className="text-xs text-muted-foreground">+255 (0) 800 000 000</p>
+                  <p className="text-xs text-muted-foreground">{siteConfig.companyPhone}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-primary">✉️</span>
                 <div>
                   <p className="font-semibold text-sm text-foreground">{t("emailSupport")}</p>
-                  <p className="text-xs text-muted-foreground">info@taxproconsult.co.tz</p>
+                  <p className="text-xs text-muted-foreground">{siteConfig.companyEmail}</p>
                 </div>
               </div>
             </div>

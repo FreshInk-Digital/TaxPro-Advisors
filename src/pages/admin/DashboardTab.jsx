@@ -6,7 +6,7 @@ import { SkeletonDashboard } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ContentHeader } from "@/components/admin/ContentHeader";
 
-export const DashboardTab = () => {
+export const DashboardTab = ({ onNavigateTab }) => {
   const { t, lang } = useLanguage();
 
   const { data: requests, isLoading: loadingReqs } = useQuery({
@@ -203,7 +203,13 @@ export const DashboardTab = () => {
           )}
         </div>
         <div className="bg-muted/10 px-6 py-3 border-t border-border">
-          <button className="text-xs font-bold text-primary hover:underline">View all requests</button>
+          <button
+            type="button"
+            onClick={() => onNavigateTab?.("requests")}
+            className="text-xs font-bold text-primary hover:underline"
+          >
+            View all requests
+          </button>
         </div>
       </div>
     </div>

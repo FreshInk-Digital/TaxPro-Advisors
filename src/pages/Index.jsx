@@ -77,7 +77,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [dataMessage, setDataMessage] = useState("");
 
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const activeLocale = lang || "en";
 
   const { data: apiServicesData } = useQuery({
@@ -241,7 +241,7 @@ const Index = () => {
     <div>
       {dataMessage ? (
         <div className="container pt-6">
-          <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          <div className="flex items-start gap-3 px-4 py-3 border rounded-2xl border-amber-200 bg-amber-50 text-amber-800">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
             <p className="text-sm leading-relaxed">{dataMessage}</p>
           </div>
@@ -249,8 +249,8 @@ const Index = () => {
       ) : null}
 
       {/* Hero */}
-      <section className="relative overflow-hidden py-20 md:py-28">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-background via-background to-secondary/30" />
+      <section className="relative py-20 overflow-hidden md:py-28">
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-background via-background to-secondary/30" />
         <div className="container relative z-10 grid gap-12 md:grid-cols-2 md:items-center">
           <div className="flex flex-col gap-6 animate-fade-in">
             <span className="inline-flex w-fit items-center gap-2 rounded-full gradient-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground shadow-md">
@@ -269,12 +269,12 @@ const Index = () => {
             <div className="flex flex-wrap gap-3">
               <Button
                 size="lg"
-                className="gradient-primary text-primary-foreground shadow-lg transition-shadow hover:shadow-xl"
+                className="transition-shadow shadow-lg gradient-primary text-primary-foreground hover:shadow-xl"
                 asChild
               >
                 <Link to={homeData?.primaryButtonLink || "/services"}>
                   {homeData?.primaryButtonText || "Get Started"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
 
@@ -296,7 +296,7 @@ const Index = () => {
                   key={i}
                   src={slide.src}
                   alt={slide.alt}
-                  className="absolute inset-0 h-full w-full object-cover transition-opacity duration-1000"
+                  className="absolute inset-0 object-cover w-full h-full transition-opacity duration-1000"
                   style={{ opacity: currentSlide === i ? 1 : 0 }}
                   width={800}
                   height={600}
@@ -305,7 +305,7 @@ const Index = () => {
 
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 to-transparent" />
 
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+              <div className="absolute flex items-center justify-between bottom-4 left-4 right-4">
                 <span className="text-sm font-semibold text-primary-foreground drop-shadow-lg">
                   {heroSlides[currentSlide]?.caption}
                 </span>
@@ -328,8 +328,8 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="glass-card absolute -bottom-5 left-4 flex items-center gap-3 rounded-xl px-5 py-3 shadow-xl">
-              <CheckCircle className="h-5 w-5 text-primary" />
+            <div className="absolute flex items-center gap-3 px-5 py-3 shadow-xl glass-card -bottom-5 left-4 rounded-xl">
+              <CheckCircle className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-lg font-bold text-foreground">
                   {stats?.[1]?.value || "$50M+"}
@@ -340,7 +340,7 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+            <div className="absolute w-24 h-24 rounded-full -right-4 -top-4 bg-primary/10 blur-2xl" />
           </div>
         </div>
       </section>
@@ -348,14 +348,14 @@ const Index = () => {
       {/* Stats Bar */}
       <section className="relative z-20 -mt-2">
         <div className="container">
-          <div className="grid grid-cols-2 gap-4 rounded-2xl gradient-primary p-6 shadow-xl md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 p-6 shadow-xl rounded-2xl gradient-primary md:grid-cols-4">
             {stats.map((stat, i) => (
               <div
                 key={`${stat.label}-${i}`}
-                className="animate-count-up flex flex-col items-center gap-1 text-center text-primary-foreground"
+                className="flex flex-col items-center gap-1 text-center animate-count-up text-primary-foreground"
                 style={{ animationDelay: `${i * 0.1}s`, opacity: 0 }}
               >
-                <stat.icon className="mb-1 h-6 w-6 opacity-80" />
+                <stat.icon className="w-6 h-6 mb-1 opacity-80" />
                 <p className="text-2xl font-extrabold">{stat.value}</p>
                 <p className="text-xs opacity-80">{stat.label}</p>
               </div>
@@ -365,9 +365,9 @@ const Index = () => {
       </section>
 
       {/* Services Overview */}
-      <section className="section-alt py-20">
+      <section className="py-20 section-alt">
         <div className="container text-center">
-          <span className="mb-4 inline-block rounded-full bg-secondary px-4 py-1 text-xs font-semibold text-secondary-foreground">
+          <span className="inline-block px-4 py-1 mb-4 text-xs font-semibold rounded-full bg-secondary text-secondary-foreground">
             {homeData?.sectionTag || "What We Do"}
           </span>
 
@@ -375,20 +375,20 @@ const Index = () => {
             {homeData?.sectionTitle || "Our Services"}
           </h2>
 
-          <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
+          <p className="max-w-lg mx-auto mt-3 text-muted-foreground">
             {homeData?.sectionSubtitle ||
               "Practical tax advisory and documentation support tailored for businesses and individuals."}
           </p>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
+          <div className="grid gap-6 mt-12 sm:grid-cols-3">
             {displayServices.map((s, i) => (
               <div
                 key={i}
-                className="animate-fade-in-up rounded-2xl border border-border bg-card p-8 text-left hover-lift"
+                className="p-8 text-left border animate-fade-in-up rounded-2xl border-border bg-card hover-lift"
                 style={{ animationDelay: `${i * 0.15}s`, opacity: 0 }}
               >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-md">
-                  <s.icon className="h-6 w-6 text-primary-foreground" />
+                <div className="flex items-center justify-center w-12 h-12 mb-5 shadow-md rounded-xl gradient-primary">
+                  <s.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
 
                 <h3 className="text-lg font-bold text-foreground">{s.title}</h3>
@@ -397,10 +397,10 @@ const Index = () => {
                   {s.desc}
                 </p>
 
-                <Button variant="outline" className="mt-5 w-full" asChild>
+                <Button variant="outline" className="w-full mt-5" asChild>
                   <Link to="/service-request">
-                    Request Service
-                    <ArrowRight className="ml-2 h-3 w-3" />
+                    {t("requestServices")}
+                    <ArrowRight className="w-3 h-3 ml-2" />
                   </Link>
                 </Button>
               </div>
@@ -412,7 +412,7 @@ const Index = () => {
       {/* Testimonials */}
       <section className="py-20">
         <div className="container text-center">
-          <span className="mb-4 inline-block rounded-full bg-secondary px-4 py-1 text-xs font-semibold text-secondary-foreground">
+          <span className="inline-block px-4 py-1 mb-4 text-xs font-semibold rounded-full bg-secondary text-secondary-foreground">
             {homeData?.section2Tag || "Testimonials"}
           </span>
 
@@ -420,23 +420,23 @@ const Index = () => {
             {homeData?.section2Title || "What Clients Say"}
           </h2>
 
-          <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
+          <p className="max-w-lg mx-auto mt-3 text-muted-foreground">
             {homeData?.section2Subtitle ||
               "Trusted by founders, companies, and investors who need accurate tax guidance."}
           </p>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 mt-12 md:grid-cols-3">
             {testimonials.map((tm, i) => (
               <div
                 key={`${tm.name}-${i}`}
-                className="animate-fade-in-up rounded-2xl border border-border bg-card p-6 text-left hover-lift"
+                className="p-6 text-left border animate-fade-in-up rounded-2xl border-border bg-card hover-lift"
                 style={{ animationDelay: `${i * 0.15}s`, opacity: 0 }}
               >
-                <div className="mb-4 flex gap-1">
+                <div className="flex gap-1 mb-4">
                   {Array.from({ length: tm.rating || 5 }).map((_, j) => (
                     <Star
                       key={j}
-                      className="h-4 w-4 fill-primary text-primary"
+                      className="w-4 h-4 fill-primary text-primary"
                     />
                   ))}
                 </div>
@@ -445,8 +445,8 @@ const Index = () => {
                   "{tm.text}"
                 </p>
 
-                <div className="mt-5 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full gradient-primary text-sm font-bold text-primary-foreground">
+                <div className="flex items-center gap-3 mt-5">
+                  <div className="flex items-center justify-center w-10 h-10 text-sm font-bold rounded-full gradient-primary text-primary-foreground">
                     {tm.name?.charAt(0) || "C"}
                   </div>
 
@@ -464,10 +464,10 @@ const Index = () => {
       </section>
 
       {/* Contact Form */}
-      <section className="section-alt py-20">
+      <section className="py-20 section-alt">
         <div className="container grid gap-12 md:grid-cols-2 md:items-start">
           <div className="flex flex-col gap-6">
-            <span className="inline-block w-fit rounded-full bg-secondary px-4 py-1 text-xs font-semibold text-secondary-foreground">
+            <span className="inline-block px-4 py-1 text-xs font-semibold rounded-full w-fit bg-secondary text-secondary-foreground">
               {homeData?.section3Tag || "Get In Touch"}
             </span>
 
@@ -482,9 +482,9 @@ const Index = () => {
             </p>
 
             <div className="flex flex-col gap-5">
-              <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 hover-lift">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg gradient-primary">
-                  <Clock className="h-5 w-5 text-primary-foreground" />
+              <div className="flex items-center gap-4 p-4 border rounded-xl border-border bg-card hover-lift">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0 gradient-primary">
+                  <Clock className="w-5 h-5 text-primary-foreground" />
                 </div>
 
                 <div>
@@ -498,9 +498,9 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 hover-lift">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg gradient-primary">
-                  <Shield className="h-5 w-5 text-primary-foreground" />
+              <div className="flex items-center gap-4 p-4 border rounded-xl border-border bg-card hover-lift">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg shrink-0 gradient-primary">
+                  <Shield className="w-5 h-5 text-primary-foreground" />
                 </div>
 
                 <div>
@@ -522,7 +522,7 @@ const Index = () => {
       {/* Posters Preview */}
       <section className="py-20">
         <div className="container text-center">
-          <span className="mb-4 inline-block rounded-full bg-secondary px-4 py-1 text-xs font-semibold text-secondary-foreground">
+          <span className="inline-block px-4 py-1 mb-4 text-xs font-semibold rounded-full bg-secondary text-secondary-foreground">
             {homeData?.section4Tag || "Free Resources"}
           </span>
 
@@ -530,23 +530,23 @@ const Index = () => {
             {homeData?.section4Title || "Posters & Resources"}
           </h2>
 
-          <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
+          <p className="max-w-lg mx-auto mt-3 text-muted-foreground">
             {homeData?.section4Subtitle ||
               "Helpful downloadable materials and quick guides for tax awareness."}
           </p>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 md:grid-cols-4">
+          <div className="grid gap-6 mt-12 sm:grid-cols-2 md:grid-cols-4">
             {posters.map((poster, i) => (
               <div
                 key={`${poster.title}-${i}`}
-                className="animate-fade-in-up rounded-2xl border border-border bg-card p-5 text-left hover-lift"
+                className="p-5 text-left border animate-fade-in-up rounded-2xl border-border bg-card hover-lift"
                 style={{ animationDelay: `${i * 0.1}s`, opacity: 0 }}
               >
                 <div className="mb-4 flex aspect-[4/5] items-center justify-center overflow-hidden rounded-xl bg-muted">
                   {poster.imageUrl ? (
-                    <img src={poster.imageUrl} alt={poster.title} className="h-full w-full object-contain" />
+                    <img src={poster.imageUrl} alt={poster.title} className="object-contain w-full h-full" />
                   ) : (
-                    <FileText className="h-10 w-10 text-primary/60" />
+                    <FileText className="w-10 h-10 text-primary/60" />
                   )}
                 </div>
 
@@ -559,7 +559,7 @@ const Index = () => {
                 </p>
 
                 {poster.fileUrl && (
-                  <Button variant="outline" size="sm" className="mt-4 w-full text-xs" asChild>
+                  <Button variant="outline" size="sm" className="w-full mt-4 text-xs" asChild>
                     <a href={poster.fileUrl} target="_blank" rel="noreferrer" download>
                       Download
                     </a>
@@ -574,17 +574,17 @@ const Index = () => {
       {/* CTA Banner */}
       <section className="py-16">
         <div className="container">
-          <div className="rounded-2xl gradient-primary p-10 text-center shadow-xl md:p-14">
+          <div className="p-10 text-center shadow-xl rounded-2xl gradient-primary md:p-14">
             <h2 className="text-3xl font-bold text-primary-foreground md:text-4xl">
               {homeData?.CTA_title || "Ready to work with tax experts?"}
             </h2>
 
-            <p className="mx-auto mt-3 max-w-lg text-primary-foreground/80">
+            <p className="max-w-lg mx-auto mt-3 text-primary-foreground/80">
               {homeData?.CTA_description ||
                 "Book a consultation today and let us help you simplify compliance and planning."}
             </p>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
               <Button
                 size="lg"
                 variant="secondary"
@@ -595,14 +595,14 @@ const Index = () => {
                   to={homeData?.CTA_primaryButtonLink || "/service-request"}
                 >
                   {homeData?.CTA_primaryButtonText || "Book Consultation"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
 
               <Button
                 size="lg"
                 variant="outline"
-                className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+                className="text-blue-600 hover:text-white border-primary-foreground/30 hover:bg-primary-foreground/10"
                 asChild
               >
                 <Link to={homeData?.CTA_secondaryButtonLink || "/services"}>
@@ -688,7 +688,7 @@ const IndexContactForm = ({ lang }) => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="rounded-2xl border border-border bg-card p-8 shadow-lg space-y-4"
+      className="p-8 space-y-4 border shadow-lg rounded-2xl border-border bg-card"
       noValidate
     >
       {/* Full Name */}
@@ -760,14 +760,14 @@ const IndexContactForm = ({ lang }) => {
       <Button
         id="idx-submit-btn"
         type="submit"
-        className="w-full gradient-primary text-primary-foreground shadow-md transition-shadow hover:shadow-lg"
+        className="w-full transition-shadow shadow-md gradient-primary text-primary-foreground hover:shadow-lg"
         size="lg"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
-          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("sending")}</>
+          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t("sending")}</>
         ) : (
-          <>{t("sendRequest")} <ArrowRight className="ml-2 h-4 w-4" /></>
+          <>{t("sendRequest")} <ArrowRight className="w-4 h-4 ml-2" /></>
         )}
       </Button>
     </form>

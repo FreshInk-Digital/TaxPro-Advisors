@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { authApi, setToken } from "@/lib/api";
 import { loginSchema } from "@/lib/schemas";
+import { siteConfig } from "@/lib/siteConfig";
 
 const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -83,7 +84,7 @@ const AdminLogin = () => {
               <Input
                 id="login-email"
                 type="email"
-                placeholder="admin@taxproconsult.co.tz"
+                placeholder={siteConfig.adminDefaultEmail}
                 autoComplete="email"
                 {...register("email")}
                 className={`pl-10 ${errors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}

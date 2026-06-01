@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { authApi, clearToken } from "@/lib/api";
 import { ResponseDialog } from "@/components/ui/response-dialog";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/lib/siteConfig";
 
 export const UserDropdown = ({ user, initials, variant = "sidebar", onNavigate }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,7 +54,7 @@ export const UserDropdown = ({ user, initials, variant = "sidebar", onNavigate }
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">{user?.firstName} {user?.lastName}</p>
-            <p className="text-[10px] text-muted-foreground truncate font-medium">{user?.email || "admin@taxpro.com"}</p>
+            <p className="text-[10px] text-muted-foreground truncate font-medium">{user?.email || siteConfig.adminDefaultEmail}</p>
           </div>
           <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} />
         </button>
@@ -162,7 +163,7 @@ const DropdownContent = ({ user, onLogout, close, onNavigate }) => (
       </div>
       <div className="flex flex-col">
         <span className="font-medium">My Account</span>
-        <span className="text-[10px] text-muted-foreground truncate max-w-[140px]">{user?.email || "admin@taxpro.com"}</span>
+        <span className="text-[10px] text-muted-foreground truncate max-w-[140px]">{user?.email || siteConfig.adminDefaultEmail}</span>
       </div>
     </button>
 

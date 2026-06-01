@@ -11,6 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { authApi, clearToken, getToken, isTokenExpired } from "@/lib/api";
 import { AdminTopBar } from "@/components/admin/AdminTopBar";
 import { UserDropdown } from "@/components/admin/UserDropdown";
+import { siteConfig } from "@/lib/siteConfig";
 
 // Lazy load tabs for better performance
 const DashboardTab = lazy(() => import("./admin/DashboardTab").then(m => ({ default: m.DashboardTab })));
@@ -114,7 +115,7 @@ const Admin = () => {
   const renderTab = () => {
     try {
       switch (activeTab) {
-        case "dashboard":     return <DashboardTab />;
+        case "dashboard":     return <DashboardTab onNavigateTab={setActiveTab} />;
         case "users":         return <UsersTab />;
         case "documentTypes": return <DocumentTypesTab />;
         case "documents":     return <DocumentsTab />;
@@ -124,7 +125,7 @@ const Admin = () => {
         case "languages":     return <LanguagesTab />;
         case "contentTranslations": return <ContentTranslationsTab initialLocale={contentLocale} />;
         case "account":       return <AccountTab />;
-        default:           return <DashboardTab />;
+        default:           return <DashboardTab onNavigateTab={setActiveTab} />;
       }
     } catch (err) {
       console.error("Tab render error:", err);
@@ -155,7 +156,7 @@ const Admin = () => {
           </div>
           {sidebarOpen && (
             <div className="animate-in fade-in duration-300">
-              <span className="font-bold text-foreground text-sm">TaxProConsult</span>
+              <span className="font-bold text-foreground text-sm">{siteConfig.companyName}</span>
               <p className="text-[10px] text-muted-foreground leading-none">Admin Portal</p>
             </div>
           )}

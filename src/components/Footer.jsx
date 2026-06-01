@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { Building2, Mail, Phone, MapPin } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { siteConfig } from "@/lib/siteConfig";
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -15,9 +16,9 @@ const Footer = () => {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
                 <Building2 className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="text-lg font-bold text-foreground">TaxPro</span>
+              <span className="text-lg font-bold text-foreground">{siteConfig.companyName}</span>
             </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed">{t("footerDescription")}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{siteConfig.footerDescription}</p>
           </div>
           <div>
             <h4 className="font-semibold text-foreground mb-3 text-sm">{t("footerQuickLinksTitle")}</h4>
@@ -35,9 +36,13 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-foreground mb-3 text-sm">{t("footerContactTitle")}</h4>
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> info@taxpro.com</span>
-              <span className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> +1 (555) 123-4567</span>
-              <span className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> 123 Financial District, NY</span>
+              <a href={`mailto:${siteConfig.companyEmail}`} className="flex items-center gap-2 transition-colors hover:text-primary">
+                <Mail className="h-3.5 w-3.5" /> {siteConfig.companyEmail}
+              </a>
+              <a href={`tel:${siteConfig.companyPhoneHref}`} className="flex items-center gap-2 transition-colors hover:text-primary">
+                <Phone className="h-3.5 w-3.5" /> {siteConfig.companyPhone}
+              </a>
+              <span className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {siteConfig.companyAddress}</span>
             </div>
           </div>
           <div>
@@ -48,7 +53,7 @@ const Footer = () => {
       </div>
       <div className="border-t border-border">
         <div className="container py-4 text-center">
-          <p className="text-xs text-muted-foreground">{t("copy_below_all")}</p>
+          <p className="text-xs text-muted-foreground">{siteConfig.copyrightText}</p>
         </div>
       </div>
     </footer>

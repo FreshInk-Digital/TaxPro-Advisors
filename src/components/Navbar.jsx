@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Building2, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { siteConfig } from "@/lib/siteConfig";
 
 const languages = [
   { code: "en", label: "EN" },
@@ -29,7 +30,7 @@ const Navbar = () => {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Building2 className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold text-foreground">TaxPro</span>
+          <span className="text-lg font-bold text-foreground">{siteConfig.companyName}</span>
         </Link>
 
         <nav className="hidden items-center gap-1 rounded-xl border border-border bg-muted/30 p-1 md:flex">

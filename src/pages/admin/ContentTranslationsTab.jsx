@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Globe, CheckCircle2, AlertCircle, Loader2, Search, X,
-  BookOpen, LayoutGrid, ChevronDown, Upload, Copy, Filter,
+  BookOpen, LayoutGrid, ChevronDown, Upload, Copy, Filter, Plus, Trash2,
   Zap, Eye, EyeOff, RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -609,7 +609,6 @@ export const ContentTranslationsTab = ({ initialLocale = null }) => {
 // KeyRow — single translation row
 // ---------------------------------------------------------------------------
 const KeyRow = ({ keyItem, value, status, onChange, onCopyDefault }) => {
-  const [showDefault, setShowDefault] = useState(true);
   const isJson = keyItem.type === "json";
   const isTextarea = keyItem.type === "textarea" || isJson;
 
@@ -642,9 +641,13 @@ const KeyRow = ({ keyItem, value, status, onChange, onCopyDefault }) => {
           )}
         </div>
         {isTextarea ? (
-          <pre className="max-h-28 overflow-auto whitespace-pre-wrap rounded-lg bg-muted/50 p-2.5 text-xs text-muted-foreground font-sans leading-relaxed">
-            {displayDefault || <em className="text-muted-foreground/50">No default</em>}
-          </pre>
+          isJson ? (
+            <JsonStructuredBlock value={displayDefault} editable={false} className="max-h-64 overflow-auto" />
+          ) : (
+            <pre className="max-h-28 overflow-auto whitespace-pre-wrap rounded-lg bg-muted/50 p-2.5 text-xs text-muted-foreground font-sans leading-relaxed">
+              {displayDefault || <em className="text-muted-foreground/50">No default</em>}
+            </pre>
+          )
         ) : (
           <p className="rounded-lg bg-muted/50 px-2.5 py-2 text-xs text-muted-foreground leading-relaxed min-h-[2rem]">
             {displayDefault || <em className="opacity-50">No default</em>}
@@ -668,19 +671,25 @@ const KeyRow = ({ keyItem, value, status, onChange, onCopyDefault }) => {
           </button>
         </div>
         {isTextarea ? (
-          <Textarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={isJson
-              ? "Paste translated JSON array here…"
-              : displayDefault || "Enter translation…"
-            }
-            rows={isJson ? 6 : 3}
-            className={cn(
-              "rounded-xl resize-y text-sm font-mono",
-              status === "missing" && !value && "border-amber-300 focus:border-amber-400"
-            )}
-          />
+          isJson ? (
+            <JsonStructuredBlock
+              value={value}
+              defaultValue={keyItem.default_value}
+              editable
+              onChange={onChange}
+            />
+          ) : (
+            <Textarea
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={displayDefault || "Enter translation…"}
+              rows={3}
+              className={cn(
+                "rounded-xl resize-y text-sm font-mono",
+                status === "missing" && !value && "border-amber-300 focus:border-amber-400"
+              )}
+            />
+          )
         ) : (
           <Input
             value={value}
@@ -710,3 +719,223 @@ const KeyRow = ({ keyItem, value, status, onChange, onCopyDefault }) => {
     </div>
   );
 };
+
+function parseJsonValue(raw) {
+  if (raw == null || raw === "") return null;
+
+  if (typeof raw === "object") return raw;
+
+  if (typeof raw !== "string") return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeJsonEntries(raw, emptyAsTemplate = false) {
+  const parsed = parseJsonValue(raw);
+  if (!parsed) return [];
+
+  if (Array.isArray(parsed)) {
+    return parsed.map((entry) => {
+      if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+        return { ...entry };
+      }
+      return { value: emptyAsTemplate ? "" : (entry ?? "") };
+    });
+  }
+
+  if (typeof parsed === "object") {
+    return Object.entries(parsed).map(([key, value]) => ({ key, value }));
+  }
+
+  return [];
+}
+
+function cloneBlankJsonEntries(templateEntries) {
+  if (!templateEntries.length) return [{ value: "" }];
+
+  return templateEntries.map((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      return { value: "" };
+    }
+
+    return Object.keys(entry).reduce((acc, key) => {
+      acc[key] = "";
+      return acc;
+    }, {});
+  });
+}
+
+function collectJsonFieldNames(entries) {
+  const fields = [];
+  const seen = new Set();
+
+  entries.forEach((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return;
+    Object.keys(entry).forEach((key) => {
+      if (!seen.has(key)) {
+        seen.add(key);
+        fields.push(key);
+      }
+    });
+  });
+
+  return fields;
+}
+
+function inferJsonFieldTypes(entries, templateEntries) {
+  const fieldTypes = {};
+
+  [...templateEntries, ...entries].forEach((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return;
+    Object.entries(entry).forEach(([key, value]) => {
+      if (typeof value === "number") {
+        fieldTypes[key] = "number";
+      } else if (!fieldTypes[key]) {
+        fieldTypes[key] = "text";
+      }
+    });
+  });
+
+  return fieldTypes;
+}
+
+function prettifyJsonFieldName(field) {
+  return field
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function JsonStructuredBlock({ value, defaultValue = null, editable = false, onChange = null, className = "" }) {
+  const templateEntries = useMemo(() => normalizeJsonEntries(defaultValue), [defaultValue]);
+  const currentEntries = useMemo(() => normalizeJsonEntries(value), [value]);
+
+  const [draftEntries, setDraftEntries] = useState(() => {
+    if (editable) {
+      return currentEntries.length > 0 ? currentEntries : cloneBlankJsonEntries(templateEntries);
+    }
+    return currentEntries.length > 0 ? currentEntries : templateEntries;
+  });
+
+  useEffect(() => {
+    if (editable) {
+      setDraftEntries(currentEntries.length > 0 ? currentEntries : cloneBlankJsonEntries(templateEntries));
+      return;
+    }
+
+    setDraftEntries(currentEntries.length > 0 ? currentEntries : templateEntries);
+  }, [editable, currentEntries, templateEntries]);
+
+  const fieldNames = useMemo(() => {
+    const names = collectJsonFieldNames([...templateEntries, ...draftEntries]);
+    return names.length > 0 ? names : ["value"];
+  }, [draftEntries, templateEntries]);
+
+  const fieldTypes = useMemo(() => inferJsonFieldTypes(draftEntries, templateEntries), [draftEntries, templateEntries]);
+
+  const emitChange = useCallback((nextEntries) => {
+    setDraftEntries(nextEntries);
+    if (onChange) {
+      onChange(JSON.stringify(nextEntries, null, 2));
+    }
+  }, [onChange]);
+
+  const updateEntry = (index, field, nextValue) => {
+    const nextEntries = draftEntries.map((entry, entryIndex) => {
+      if (entryIndex !== index) return entry;
+      return { ...entry, [field]: nextValue };
+    });
+    emitChange(nextEntries);
+  };
+
+  const addEntry = () => {
+    emitChange([...draftEntries, ...cloneBlankJsonEntries(templateEntries).slice(0, 1)]);
+  };
+
+  const removeEntry = (index) => {
+    emitChange(draftEntries.filter((_, entryIndex) => entryIndex !== index));
+  };
+
+  if (!draftEntries.length) {
+    return editable ? (
+      <div className={cn("space-y-3", className)}>
+        <div className="rounded-xl border border-dashed border-border bg-muted/10 p-4 text-sm text-muted-foreground">
+          No items yet. Add a row to start translating this structured value.
+        </div>
+        <Button type="button" variant="outline" size="sm" className="rounded-lg" onClick={addEntry}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Add Row
+        </Button>
+      </div>
+    ) : (
+      <div className={cn("rounded-xl border border-border bg-muted/10 p-4 text-sm text-muted-foreground", className)}>
+        No structured data
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("space-y-3", className)}>
+      {draftEntries.map((entry, index) => (
+        <div key={`${index}-${Object.keys(entry || {}).join("-")}`} className="rounded-xl border border-border bg-muted/10 p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Item {index + 1}
+            </p>
+            {editable && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive"
+                onClick={() => removeEntry(index)}
+                disabled={draftEntries.length === 1}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {fieldNames.map((field) => {
+              const isNumeric = fieldTypes[field] === "number";
+              const displayValue = entry?.[field] ?? "";
+
+              return (
+                <div key={field} className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {prettifyJsonFieldName(field)}
+                  </label>
+                  {editable ? (
+                    <Input
+                      type={isNumeric ? "number" : "text"}
+                      value={displayValue}
+                      onChange={(e) => updateEntry(index, field, isNumeric && e.target.value !== "" ? Number(e.target.value) : e.target.value)}
+                      className="rounded-lg text-sm"
+                      placeholder={`Enter ${prettifyJsonFieldName(field).toLowerCase()}`}
+                    />
+                  ) : (
+                    <div className="min-h-10 rounded-lg bg-background px-3 py-2 text-sm text-foreground">
+                      {displayValue !== "" ? String(displayValue) : <span className="text-muted-foreground/60">—</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {editable && (
+        <Button type="button" variant="outline" size="sm" className="rounded-lg" onClick={addEntry}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Add Row
+        </Button>
+      )}
+    </div>
+  );
+}

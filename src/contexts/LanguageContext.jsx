@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { languagesApi } from "@/lib/api";
 import { fetchUiBundle } from "@/lib/homePage";
+import { siteConfig } from "@/lib/siteConfig";
 
 const LanguageContext = createContext(null);
 
@@ -26,12 +27,14 @@ const uiTranslations = {
     home: "Home",
     services: "Services",
     documentation: "Documentation",
+    documentTypes: "Document Types",
+    documents: "Documents",
     posters: "Posters",
     adminPortal: "Admin Portal",
 
     // Auth
     adminLogin: "Admin Login",
-    adminLoginDesc: "Sign in to access the TaxProConsult management portal",
+    adminLoginDesc: `Sign in to access the ${siteConfig.companyName} management portal`,
     username: "Email Address",
     password: "Password",
     login: "Sign In",
@@ -89,6 +92,8 @@ const uiTranslations = {
     // Services Page
     expertTaxServices: "Expert Tax Services",
     servicesPageDesc: "Comprehensive tax advisory tailored to your business and personal needs.",
+    requestServices: "Request Service",
+    requestThisService: "Request this Service",
     newFeature: "New Feature",
     smartDiagnostic: "Smart Tax Diagnostic",
     diagnosticDesc: "Answer a few questions and get a personalized tax recommendation in minutes.",
@@ -120,6 +125,9 @@ const uiTranslations = {
     docDesc: "Download tax forms, compliance guides, and educational materials.",
     searchDocs: "Search documents...",
     categories: "Categories",
+    allDocuments: "All Documents",
+    sortByCaseCode: "Sort by Case Code",
+    caseCode: "Case Code",
 
     // Footer
     footerDescription: "Practical tax advisory, documentation, and compliance support for growing businesses and individuals.",
@@ -131,7 +139,7 @@ const uiTranslations = {
     footerContactTitle: "Contact",
     footerNewsletterTitle: "Newsletter",
     footerNewsletterDescription: "Get tax updates and compliance reminders from our advisory team.",
-    copy_below_all: "© 2026 TaxProConsult. All rights reserved.",
+    copy_below_all: siteConfig.copyrightText,
 
     // Admin
     dashboard: "Dashboard Overview",
@@ -190,12 +198,14 @@ const uiTranslations = {
     home: "Nyumbani",
     services: "Huduma",
     documentation: "Nyaraka",
+    documentTypes: "Aina za Hati",
+    documents: "Hati",
     posters: "Mabango",
     adminPortal: "Admin",
 
     // Auth
     adminLogin: "Ingia Akaunti",
-    adminLoginDesc: "Ingia kufikia dashibodi ya usimamizi",
+    adminLoginDesc: `Ingia kufikia dashibodi ya usimamizi ya ${siteConfig.companyName}`,
     username: "Barua pepe",
     password: "Nywila",
     login: "Ingia",
@@ -253,6 +263,8 @@ const uiTranslations = {
     // Services Page
     expertTaxServices: "Huduma za Kodi za Wataalamu",
     servicesPageDesc: "Ushauri wa kodi kamili ulioboreshwa kwa biashara na mahitaji yako binafsi.",
+    requestServices: "Omba Huduma",
+    requestThisService: "Omba huduma hii",
     newFeature: "Kipengele Kipya",
     smartDiagnostic: "Tathmini Mahiri ya Kodi",
     diagnosticDesc: "Jibu maswali machache na upate mapendekezo ya kodi yanayokufaa.",
@@ -284,6 +296,9 @@ const uiTranslations = {
     docDesc: "Pakua fomu za kodi, miongozo ya uzingatifu na vifaa vya elimu.",
     searchDocs: "Tafuta nyaraka...",
     categories: "Makundi",
+    allDocuments: "Hati Zote",
+    sortByCaseCode: "Panga kwa Msimbo wa Kesi",
+    caseCode: "Msimbo wa Kesi",
 
     // Footer
     footerDescription: "Ushauri wa kodi, nyaraka, na msaada wa uzingatifu kwa biashara zinazokua na watu binafsi.",
@@ -295,7 +310,7 @@ const uiTranslations = {
     footerContactTitle: "Mawasiliano",
     footerNewsletterTitle: "Jarida",
     footerNewsletterDescription: "Pata taarifa za kodi na vikumbusho vya uzingatifu kutoka kwa timu yetu ya ushauri.",
-    copy_below_all: "© 2026 TaxProConsult. Haki zote zimehifadhiwa.",
+    copy_below_all: siteConfig.copyrightText,
 
     // Admin
     dashboard: "Muhtasari wa Dashibodi",
@@ -355,10 +370,12 @@ const uiTranslations = {
     home: "首页",
     services: "服务",
     documentation: "文档",
+    documentTypes: "文档类型",
+    documents: "文档",
     posters: "海报",
     adminPortal: "管理入口",
     adminLogin: "管理员登录",
-    adminLoginDesc: "登录以访问TaxProConsult管理后台",
+    adminLoginDesc: `登录以访问${siteConfig.companyName}管理后台`,
     username: "电子邮件",
     password: "密码",
     login: "登录",
@@ -406,6 +423,8 @@ const uiTranslations = {
     expertTaxServices: "专业税务服务",
     corporateTax: "企业税务规划",
     servicesPageDesc: "量身定制的全面税务咨询。",
+    requestServices: "申请服务",
+    requestThisService: "申请此服务",
     readyGetStarted: "准备好开始了吗？",
     readyDesc: "联系我们的顾问进行个性化咨询。",
     directLine: "直线电话",
@@ -418,6 +437,9 @@ const uiTranslations = {
     docDesc: "下载税务表格、合规指南和教育材料。",
     searchDocs: "搜索文档...",
     categories: "文档类别",
+    allDocuments: "全部文档",
+    sortByCaseCode: "按案件编号排序",
+    caseCode: "案件编号",
     footerDescription: "为成长型企业和个人提供实用的税务咨询、文档和合规支持。",
     footerQuickLinksTitle: "快速链接",
     footerServicesLink: "服务",
@@ -427,7 +449,7 @@ const uiTranslations = {
     footerContactTitle: "联系方式",
     footerNewsletterTitle: "通讯",
     footerNewsletterDescription: "获取我们顾问团队的税务更新和合规提醒。",
-    copy_below_all: "© 2026 TaxProConsult. 保留所有权利。",
+    copy_below_all: siteConfig.copyrightText,
     loading: "加载中...",
     addNew: "新增",
     edit: "编辑",
