@@ -5,6 +5,7 @@ import path from "path";
 const apiProxyTarget = process.env.VITE_API_PROXY_TARGET || "https://taxproconsult.co.tz/";
 
 export default defineConfig({
+  base: "/", 
   plugins: [react()],
   resolve: {
     alias: {

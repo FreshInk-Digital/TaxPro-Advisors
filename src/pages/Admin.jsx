@@ -1,6 +1,6 @@
 // File: src/pages/Admin.jsx
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Building2, LayoutDashboard, FileEdit, MessageSquare,
   Globe, Users, Image, LogOut, Menu, X, User, Settings, ChevronRight, FileText, FolderOpen, Languages
@@ -12,6 +12,7 @@ import { authApi, clearToken, getToken, isTokenExpired } from "@/lib/api";
 import { AdminTopBar } from "@/components/admin/AdminTopBar";
 import { UserDropdown } from "@/components/admin/UserDropdown";
 import { siteConfig } from "@/lib/siteConfig";
+import { ResponseDialog } from "@/components/ui/response-dialog";
 
 // Lazy load tabs for better performance
 const DashboardTab = lazy(() => import("./admin/DashboardTab").then(m => ({ default: m.DashboardTab })));
@@ -41,6 +42,7 @@ const sidebarItems = [
 const Admin = () => {
   const [activeTab, setActiveTab]   = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [viewSiteConfirmOpen, setViewSiteConfirmOpen] = useState(false);
   // locale passed from LanguagesTab → ContentTranslationsTab after language creation
   const [contentLocale, setContentLocale] = useState(null);
 
@@ -57,6 +59,17 @@ const Admin = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const sessionExpiredHandled = useRef(false);
+
+  const handleViewSite = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Ignore logout API failures and still clear local auth state.
+    }
+    clearToken();
+    setViewSiteConfirmOpen(false);
+    navigate("/");
+  };
 
   useEffect(() => {
     const handleExpiredSession = () => {
@@ -183,11 +196,15 @@ const Admin = () => {
 
         {/* User Dropdown in Sidebar */}
         <div className="border-t border-border p-4 space-y-3 shrink-0">
-          <Button variant="outline" size="sm" className={`w-full ${!sidebarOpen && "md:p-0 md:w-10 md:h-10 md:rounded-full"}`} asChild>
-            <Link to="/" target="_blank">
-              <Globe className={`${sidebarOpen ? "mr-2" : ""} h-3.5 w-3.5`} /> 
-              {sidebarOpen && "View Site"}
-            </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className={`w-full ${!sidebarOpen && "md:p-0 md:w-10 md:h-10 md:rounded-full"}`}
+            onClick={() => setViewSiteConfirmOpen(true)}
+            type="button"
+          >
+            <Globe className={`${sidebarOpen ? "mr-2" : ""} h-3.5 w-3.5`} />
+            {sidebarOpen && "View Site"}
           </Button>
           
           <UserDropdown 
@@ -198,6 +215,25 @@ const Admin = () => {
           />
         </div>
       </aside>
+
+      <ResponseDialog
+        open={viewSiteConfirmOpen}
+        onClose={() => setViewSiteConfirmOpen(false)}
+        variant="confirm"
+        title="Leave Admin Panel?"
+        subtitle="For security, you will be signed out before going back to the home page."
+        size="md"
+        actions={
+          <>
+            <Button variant="outline" className="min-w-[110px] rounded-xl" onClick={() => setViewSiteConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" className="min-w-[110px] rounded-xl" onClick={handleViewSite}>
+              Log Out & Continue
+            </Button>
+          </>
+        }
+      />
 
         {/* Main content */}
         <div className={`flex flex-1 flex-col min-h-screen transition-[padding] duration-300 ease-in-out ${

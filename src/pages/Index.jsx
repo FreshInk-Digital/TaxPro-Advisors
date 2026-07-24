@@ -30,16 +30,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
-import heroImage1 from "@/assets/hero-image.jpg";
-import heroImage2 from "@/assets/hero-2.jpg";
-import heroImage3 from "@/assets/hero-3.jpg";
-import heroImage4 from "@/assets/hero-4.jpg";
+import carouselImage1 from "@/assets/carousel-images/wallpaper-1.jpeg";
+import carouselImage2 from "@/assets/carousel-images/wallpaper-2.jpeg";
+import carouselImage3 from "@/assets/carousel-images/wallpaper-3.jpeg";
+import carouselImage4 from "@/assets/carousel-images/wallpaper-4.jpeg";
+import carouselImage5 from "@/assets/carousel-images/wallpaper-5.jpeg";
+import carouselImage6 from "@/assets/carousel-images/wallpaper-6.jpeg";
 import { fetchHomePageData } from "@/lib/homePage";
 import { getPosterPreviewUrl, publicApi, servicesApi, postersApi } from "@/lib/api";
 import { serviceRequestSchema } from "@/lib/schemas";
 import { SkeletonHero, SkeletonStats } from "@/components/ui/skeleton";
 
-const heroImages = [heroImage1, heroImage2, heroImage3, heroImage4];
+const heroImages = [
+  carouselImage1,
+  carouselImage2,
+  carouselImage3,
+  carouselImage4,
+  carouselImage5,
+  carouselImage6,
+];
 const statIcons = [Users, TrendingUp, Award, Star];
 
 const defaultServiceCards = [

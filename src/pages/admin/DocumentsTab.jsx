@@ -281,6 +281,7 @@ export const DocumentsTab = () => {
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending || isSubmitting;
+  const hasAttachedDocument = Boolean(selectedFile || editing);
 
   return (
     <>
@@ -602,7 +603,14 @@ export const DocumentsTab = () => {
               <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Document File {editing ? "(Optional - Upload to replace)" : <span className="text-destructive ml-0.5">*</span>}
               </label>
-              <div className="p-4 text-center transition-colors border-2 border-dashed border-border rounded-xl hover:bg-muted/10">
+              <div
+                className={cn(
+                  "rounded-xl border-2 border-dashed p-4 text-center transition-colors",
+                  hasAttachedDocument
+                    ? "border-green-500 bg-green-50/80 hover:bg-green-50"
+                    : "border-border bg-muted/20 hover:bg-muted/30"
+                )}
+              >
                 <Input 
                   type="file" 
                   className="hidden" 
@@ -611,11 +619,15 @@ export const DocumentsTab = () => {
                   onChange={(e) => setSelectedFile(e.target.files?.[0])}
                 />
                 <label htmlFor="documentFile" className="flex flex-col items-center justify-center gap-2 cursor-pointer">
-                  <UploadCloud className="w-6 h-6 text-muted-foreground" />
-                  <span className="text-sm font-medium text-primary">Click to select a file</span>
-                  <span className="text-xs text-muted-foreground">PDF, DOC, XLS, Images (Max: 20MB)</span>
-                  {selectedFile && <Badge variant="secondary" className="mt-2">{selectedFile.name}</Badge>}
-                  {editing && !selectedFile && <span className="mt-1 text-xs italic text-muted-foreground">Current file will be kept.</span>}
+                  <UploadCloud className={cn("w-6 h-6", hasAttachedDocument ? "text-green-600" : "text-muted-foreground")} />
+                  <span className={cn("text-sm font-medium", hasAttachedDocument ? "text-green-700" : "text-muted-foreground")}>
+                    {hasAttachedDocument ? "Document attached successfully" : "Click to select a file"}
+                  </span>
+                  <span className={cn("text-xs", hasAttachedDocument ? "text-green-700/80" : "text-muted-foreground")}>
+                    PDF, DOC, XLS, Images (Max: 20MB)
+                  </span>
+                  {selectedFile && <Badge className="mt-2 border-green-200 bg-green-100 text-green-800 hover:bg-green-100">{selectedFile.name}</Badge>}
+                  {editing && !selectedFile && <span className="mt-1 text-xs italic text-green-700">Current file is attached and will be kept.</span>}
                 </label>
               </div>
             </div>

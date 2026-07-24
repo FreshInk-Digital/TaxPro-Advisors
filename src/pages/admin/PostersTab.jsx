@@ -219,6 +219,8 @@ export const PostersTab = () => {
     else createMutation.mutate(fd);
   };
 
+  const hasAttachedImage = Boolean(imagePreview);
+
   const toggleSelectAll = () => {
     const pageIds = paginatedData.map(poster => poster.id);
     const allSelected = pageIds.every(id => selectedIds.includes(id));
@@ -421,19 +423,29 @@ export const PostersTab = () => {
               <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Poster Image {editing ? "(Optional - Upload to replace)" : <span className="text-destructive ml-0.5">*</span>}
               </label>
-              <div className="border-2 border-dashed border-border rounded-xl p-4 text-center hover:bg-muted/10 transition-colors">
+              <div
+                className={cn(
+                  "rounded-xl border-2 border-dashed p-4 text-center transition-colors",
+                  hasAttachedImage
+                    ? "border-green-500 bg-green-50/80 hover:bg-green-50"
+                    : "border-border bg-muted/20 hover:bg-muted/30"
+                )}
+              >
                 <input ref={fileInputRef} type="file" className="hidden" accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp" onChange={onFileChange} />
                 <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full cursor-pointer flex flex-col items-center justify-center gap-2">
                   {imagePreview ? (
-                    <img src={imagePreview} alt="Poster preview" className="max-h-56 w-full rounded-lg object-contain" />
+                    <>
+                      <img src={imagePreview} alt="Poster preview" className="max-h-56 w-full rounded-lg object-contain" />
+                      <span className="text-sm font-medium text-green-700">Image attached successfully</span>
+                    </>
                   ) : (
                     <>
                       <UploadCloud className="h-6 w-6 text-muted-foreground" />
-                      <span className="text-sm font-medium text-primary">Click to select an image</span>
+                      <span className="text-sm font-medium text-muted-foreground">Click to select an image</span>
                       <span className="text-xs text-muted-foreground">JPEG, PNG, GIF, SVG, WebP (Max: 10MB)</span>
                     </>
                   )}
-                  {imageFile && <Badge variant="secondary" className="mt-2">{imageFile.name}</Badge>}
+                  {imageFile && <Badge className="mt-2 border-green-200 bg-green-100 text-green-800 hover:bg-green-100">{imageFile.name}</Badge>}
                 </button>
               </div>
             </div>

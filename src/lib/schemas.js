@@ -184,6 +184,10 @@ export const documentSchema = z.object({
     .transform((v) => Number(v))
     .refine((v) => !isNaN(v) && v > 0, "Document type is required"),
   status: z.enum(["active", "notActive"]).default("active"),
+  caseCode: z
+    .string({ required_error: "Case code is required" })
+    .trim()
+    .min(1, "Case code is required"),
   custom_file_name: z.string().optional(),
   translations: z
     .array(documentTranslationSchema)
